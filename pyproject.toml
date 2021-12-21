@@ -7,10 +7,13 @@ authors = ["Byeonghoon Yoo <bh322yoo@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.7"
 aiohttp = {version = "^3.8.1", extras = ["speedups"]}
+typing-extensions = "^4.0.1"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.920"
 black = "^21.12b0"
+pytest = "^6.2.5"
+pytest-asyncio = "^0.16.0"
 
 
 [build-system]

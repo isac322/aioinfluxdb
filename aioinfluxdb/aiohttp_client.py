@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import http
-from typing import Optional
+from typing import Iterable, Mapping, Optional, Union, overload
 
 import aiohttp
 
-from aioinfluxdb.client import Client
+from aioinfluxdb import constants, serializer, types
+from aioinfluxdb.client import Client, _Sentinel
 
 
 class AioHTTPClient(Client):
@@ -21,8 +22,9 @@ class AioHTTPClient(Client):
         tls: bool = False,
         connector: Optional[aiohttp.BaseConnector] = None,
         session: Optional[aiohttp.ClientSession] = None,
+        gzip: bool = True,
     ) -> None:
-        super().__init__(token)
+        super().__init__(token=token, gzip=gzip)
 
         self._host = host
         self._port = port
@@ -37,6 +39,128 @@ class AioHTTPClient(Client):
     async def ping(self) -> bool:
         res = await self._session.get('/ping')
         return res.status in (http.HTTPStatus.OK, http.HTTPStatus.NO_CONTENT)
+
+    @overload
+    async def write(
+        self,
+        *,
+        bucket: str,
+        organization: str,
+        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
+        record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
+    ) -> None:
+        pass
+
+    @overload
+    async def write(
+        self,
+        *,
+        bucket: str,
+        organization_id: str,
+        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
+        record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
+    ) -> None:
+        pass
+
+    async def write(
+        self,
+        *,
+        bucket: str,
+        organization: Union[str, _Sentinel] = _Sentinel.MISSING,
+        organization_id: Union[str, _Sentinel] = _Sentinel.MISSING,
+        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
+        record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
+    ) -> None:
+        res = await self._session.post(
+            '/api/v2/write',
+            params=self._build_query_params(
+                bucket=bucket,
+                organization=organization,
+                organization_id=organization_id,
+                precision=precision.value,
+            ),
+            headers={aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'},
+            data=serializer.DefaultRecordSerializer.serialize_record(record),
+        )
+        res.raise_for_status()
+
+    @overload
+    async def write_multiple(
+        self,
+        *,
+        bucket: str,
+        organization: str,
+        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
+        records: Union[
+            Iterable[str],
+            Iterable[types.Record],
+            Iterable[types.MinimalRecordTuple],
+            Iterable[types.RecordTuple],
+        ],
+    ) -> None:
+        pass
+
+    @overload
+    async def write_multiple(
+        self,
+        *,
+        bucket: str,
+        organization_id: str,
+        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
+        records: Union[
+            Iterable[str],
+            Iterable[types.Record],
+            Iterable[types.MinimalRecordTuple],
+            Iterable[types.RecordTuple],
+        ],
+    ) -> None:
+        pass
+
+    async def write_multiple(
+        self,
+        *,
+        bucket: str,
+        organization: Union[str, _Sentinel] = _Sentinel.MISSING,
+        organization_id: Union[str, _Sentinel] = _Sentinel.MISSING,
+        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
+        records: Union[
+            Iterable[str],
+            Iterable[types.Record],
+            Iterable[types.MinimalRecordTuple],
+            Iterable[types.RecordTuple],
+        ],
+    ) -> None:
+        res = await self._session.post(
+            '/api/v2/write',
+            params=self._build_query_params(
+                bucket=bucket,
+                organization=organization,
+                organization_id=organization_id,
+                precision=precision.value,
+            ),
+            headers={aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'},
+            data='\n'.join(map(serializer.DefaultRecordSerializer.serialize_record, records)),
+        )
+        res.raise_for_status()
+
+    @classmethod
+    def _build_query_params(
+        cls,
+        *,
+        bucket: str,
+        organization: Union[str, _Sentinel],
+        organization_id: Union[str, _Sentinel],
+        precision: constants.WritePrecision,
+    ) -> Mapping[str, str]:
+        ret = dict(
+            bucket=bucket,
+            precision=precision,
+        )
+        if organization_id is not _Sentinel.MISSING:
+            ret['orgID'] = organization_id
+        if organization is not _Sentinel.MISSING:
+            ret['org'] = organization
+        return ret
 
     async def close(self) -> None:
         await self._session.close()
