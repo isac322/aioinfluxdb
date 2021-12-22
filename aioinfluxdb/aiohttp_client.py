@@ -4,6 +4,7 @@ import http
 from typing import Iterable, Mapping, Optional, Union, overload
 
 import aiohttp
+from isal import isal_zlib as zlib
 
 from aioinfluxdb import constants, serializer, types
 from aioinfluxdb.client import Client, _Sentinel
@@ -71,6 +72,13 @@ class AioHTTPClient(Client):
         precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
         record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
     ) -> None:
+        data = serializer.DefaultRecordSerializer.serialize_record(record)
+        headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
+
+        if self._gzip:
+            data = zlib.compress(data)
+            headers[aiohttp.hdrs.CONTENT_ENCODING] = 'gzip'
+
         res = await self._session.post(
             '/api/v2/write',
             params=self._build_query_params(
@@ -79,8 +87,8 @@ class AioHTTPClient(Client):
                 organization_id=organization_id,
                 precision=precision.value,
             ),
-            headers={aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'},
-            data=serializer.DefaultRecordSerializer.serialize_record(record),
+            headers=headers,
+            data=data,
         )
         res.raise_for_status()
 
@@ -130,6 +138,13 @@ class AioHTTPClient(Client):
             Iterable[types.RecordTuple],
         ],
     ) -> None:
+        data = '\n'.join(map(serializer.DefaultRecordSerializer.serialize_record, records))
+        headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
+
+        if self._gzip:
+            data = zlib.compress(data)
+            headers[aiohttp.hdrs.CONTENT_ENCODING] = 'gzip'
+
         res = await self._session.post(
             '/api/v2/write',
             params=self._build_query_params(
@@ -138,8 +153,8 @@ class AioHTTPClient(Client):
                 organization_id=organization_id,
                 precision=precision.value,
             ),
-            headers={aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'},
-            data='\n'.join(map(serializer.DefaultRecordSerializer.serialize_record, records)),
+            headers=headers,
+            data=data,
         )
         res.raise_for_status()
 

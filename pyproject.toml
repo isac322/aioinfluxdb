@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aioinfluxdb"
-version = "0.1.1"
+version = "0.1.2"
 description = "InfluxDB Python SDK with asyncio support"
 authors = ["Byeonghoon Yoo <bh322yoo@gmail.com>"]
 
@@ -8,6 +8,7 @@ authors = ["Byeonghoon Yoo <bh322yoo@gmail.com>"]
 python = "^3.7"
 aiohttp = {version = "^3.8.1", extras = ["speedups"]}
 typing-extensions = "^4.0.1"
+isal = "^0.11.1"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.920"
