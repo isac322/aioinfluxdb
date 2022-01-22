@@ -1,0 +1,49 @@
+version: "3.9"
+
+x-shared:
+  envs: &envs
+    INFLUXDB_HOST: influxdb
+    INFLUXDB_USERNAME: test
+    INFLUXDB_PASSWORD: test_password1
+    INFLUXDB_ORG: test
+    INFLUXDB_BUCKET: test
+    INFLUXDB_ADMIN_TOKEN: DUMMYTOKEN
+
+services:
+  influxdb:
+    image: influxdb:2.1-alpine
+    environment:
+      DOCKER_INFLUXDB_INIT_USERNAME: test
+      DOCKER_INFLUXDB_INIT_PASSWORD: test_password1
+      DOCKER_INFLUXDB_INIT_ORG: test
+      DOCKER_INFLUXDB_INIT_BUCKET: test
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: DUMMYTOKEN
+      DOCKER_INFLUXDB_INIT_MODE: setup
+    ports:
+      - "8086:8086"
+
+  py37:
+    image: python:3.7-slim
+    working_dir: /opt/project
+    volumes:
+      - ./aioinfluxdb:/opt/project/aioinfluxdb:ro
+      - ./test:/opt/project/test:ro
+      - ./pyproject.toml:/opt/project/pyproject.toml:ro
+      - poetry_cache:/root/.cache/poetry
+      - pip_cache:/root/.cache/pip
+    user: root
+    command:
+      - sh
+      - -c
+      - |
+        pip install -U poetry
+        poetry install --no-root --remove-untracked
+        poetry run pytest test
+    environment:
+      <<: *envs
+    depends_on:
+      - influxdb
+
+volumes:
+  poetry_cache:
+  pip_cache:
