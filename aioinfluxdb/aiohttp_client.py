@@ -4,7 +4,7 @@ import http
 from typing import Iterable, Mapping, Optional, Union, overload
 
 import aiohttp
-from isal import isal_zlib as zlib
+from isal import igzip as gzip
 
 from aioinfluxdb import constants, serializer, types
 from aioinfluxdb.client import Client, _Sentinel
@@ -76,8 +76,9 @@ class AioHTTPClient(Client):
         headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
 
         if self._gzip:
-            data = zlib.compress(data)
+            data = gzip.compress(data.encode())
             headers[aiohttp.hdrs.CONTENT_ENCODING] = 'gzip'
+            headers[aiohttp.hdrs.ACCEPT_ENCODING] = 'gzip'
 
         res = await self._session.post(
             '/api/v2/write',
@@ -142,8 +143,9 @@ class AioHTTPClient(Client):
         headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
 
         if self._gzip:
-            data = zlib.compress(data)
+            data = gzip.compress(data.encode())
             headers[aiohttp.hdrs.CONTENT_ENCODING] = 'gzip'
+            headers[aiohttp.hdrs.ACCEPT_ENCODING] = 'gzip'
 
         res = await self._session.post(
             '/api/v2/write',
