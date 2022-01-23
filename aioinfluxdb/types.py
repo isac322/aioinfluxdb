@@ -52,7 +52,7 @@ class Link:
     write: str
 
     @classmethod
-    def from_dict(cls, data: _Link) -> Link:
+    def from_json(cls, data: _Link) -> Link:
         return cls(
             labels=data['labels'],
             members=data['members'],
@@ -76,7 +76,7 @@ class RetentionRule:
     type: str
 
     @classmethod
-    def from_dict(cls, data: _RetentionRule) -> RetentionRule:
+    def from_json(cls, data: _RetentionRule) -> RetentionRule:
         return cls(
             every_seconds=data['everySeconds'],
             shard_group_duration_seconds=data.get('shardGroupDurationSeconds'),
@@ -99,7 +99,7 @@ class Label:
     properties: Mapping[str, Any]
 
     @classmethod
-    def from_dict(cls, data: _Label) -> Label:
+    def from_json(cls, data: _Label) -> Label:
         return cls(
             id=data['id'],
             name=data['name'],
@@ -139,16 +139,16 @@ class Bucket:
     updated_at: Optional[datetime]
 
     @classmethod
-    def from_dict(cls, data: _Bucket) -> Bucket:
+    def from_json(cls, data: _Bucket) -> Bucket:
         return cls(
             created_at=isoparse(data['createdAt']) if 'createdAt' in data else None,
             description=data.get('description'),
             id=data.get('id'),
-            labels=tuple(map(Label.from_dict, data.get('labels', ()))),
-            links=Link.from_dict(data['links']) if 'links' in data else None,
+            labels=tuple(map(Label.from_json, data.get('labels', ()))),
+            links=Link.from_json(data['links']) if 'links' in data else None,
             name=data['name'],
             organization_id=data.get('orgID'),
-            retention_rules=tuple(map(RetentionRule.from_dict, data['retentionRules'])),
+            retention_rules=tuple(map(RetentionRule.from_json, data['retentionRules'])),
             rp=data.get('rp'),
             schema_type=constants.BucketSchemaType(data['schemaType']) if 'schemaType' in data else None,
             type=constants.BucketType(data.get('type', constants.BucketType.User)),

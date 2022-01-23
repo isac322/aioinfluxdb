@@ -80,7 +80,7 @@ class AioHTTPClient(Client):
         res.raise_for_status()
         # TODO: Utilize `links`
         buckets = await res.json(loads=orjson.loads)
-        return map(types.Bucket.from_dict, buckets['buckets'])
+        return map(types.Bucket.from_json, buckets['buckets'])
 
     @overload
     async def write(
