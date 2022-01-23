@@ -36,7 +36,11 @@ class AioHTTPClient(Client):
         elif session is not None:
             self._session = session
         else:
-            self._session = aiohttp.ClientSession(f'{"https" if tls else "http"}://{host}:{port}', connector=connector)
+            self._session = aiohttp.ClientSession(
+                f'{"https" if tls else "http"}://{host}:{port}',
+                connector=connector,
+                json_serialize=orjson.dumps,
+            )
 
     async def ping(self) -> bool:
         res = await self._session.get('/ping')
