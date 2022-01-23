@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable, NamedTuple, Optional, Tuple, Union
+from typing import Iterable, NamedTuple, Optional, Tuple, Union, Mapping, Any
 
-from typing_extensions import TypeAlias
+from dateutil.parser import isoparse
+from typing_extensions import TypeAlias, TypedDict
+
+from aioinfluxdb import constants
 
 TagType: TypeAlias = Tuple[str, str]
 TagSetType: TypeAlias = Iterable[Tuple[str, str]]
@@ -27,3 +31,126 @@ class Record(NamedTuple):
     def __repr__(self) -> str:
         body = ', '.join((f'{key}={getattr(self, key)}' for key in self._fields if getattr(self, key) is not None))
         return f'<{self.__class__.__name__} {body}>'
+
+
+class _Link(TypedDict):
+    labels: str
+    members: str
+    org: str
+    owners: str
+    self: str
+    write: str
+
+
+@dataclass(frozen=True)
+class Link:
+    labels: str
+    members: str
+    organization: str
+    owners: str
+    self: str
+    write: str
+
+    @classmethod
+    def from_dict(cls, data: _Link) -> Link:
+        return cls(
+            labels=data['labels'],
+            members=data['members'],
+            organization=data['org'],
+            owners=data['owners'],
+            self=data['self'],
+            write=data['write'],
+        )
+
+
+class _RetentionRule(TypedDict):
+    everySeconds: int
+    shardGroupDurationSeconds: int
+    type: str
+
+
+@dataclass(frozen=True)
+class RetentionRule:
+    every_seconds: int
+    shard_group_duration_seconds: Optional[int]
+    type: str
+
+    @classmethod
+    def from_dict(cls, data: _RetentionRule) -> RetentionRule:
+        return cls(
+            every_seconds=data['everySeconds'],
+            shard_group_duration_seconds=data.get('shardGroupDurationSeconds'),
+            type=data['type'],
+        )
+
+
+class _Label(TypedDict):
+    id: str
+    name: str
+    orgID: str
+    properties: Mapping[str, Any]
+
+
+@dataclass(frozen=True)
+class Label:
+    id: str
+    name: str
+    organization_id: str
+    properties: Mapping[str, Any]
+
+    @classmethod
+    def from_dict(cls, data: _Label) -> Label:
+        return cls(
+            id=data['id'],
+            name=data['name'],
+            organization_id=data['orgID'],
+            properties=data['properties'],
+        )
+
+
+class _Bucket(TypedDict, total=False):
+    createdAt: str
+    description: str
+    id: str
+    labels: Iterable[_Label, ...]
+    links: _Link
+    name: str
+    orgID: str
+    retentionRules: Iterable[_RetentionRule, ...]
+    rp: str
+    schemaType: str
+    type: str
+    updatedAt: str
+
+
+@dataclass(frozen=True)
+class Bucket:
+    created_at: Optional[datetime]
+    description: Optional[str]
+    id: Optional[str]
+    labels: Tuple[Label, ...]
+    links: Optional[Link]
+    name: str
+    organization_id: Optional[str]
+    retention_rules: Tuple[RetentionRule, ...]
+    rp: Optional[str]
+    schema_type: Optional[str]
+    type: str
+    updated_at: Optional[datetime]
+
+    @classmethod
+    def from_dict(cls, data: _Bucket) -> Bucket:
+        return cls(
+            created_at=isoparse(data['createdAt']) if 'createdAt' in data else None,
+            description=data.get('description'),
+            id=data.get('id'),
+            labels=tuple(map(Label.from_dict, data.get('labels', ()))),
+            links=Link.from_dict(data['links']) if 'links' in data else None,
+            name=data['name'],
+            organization_id=data.get('orgID'),
+            retention_rules=tuple(map(RetentionRule.from_dict, data['retentionRules'])),
+            rp=data.get('rp'),
+            schema_type=constants.BucketSchemaType(data['schemaType']) if 'schemaType' in data else None,
+            type=constants.BucketType(data.get('type', constants.BucketType.User)),
+            updated_at=isoparse(data['updatedAt']) if 'updatedAt' in data else None,
+        )

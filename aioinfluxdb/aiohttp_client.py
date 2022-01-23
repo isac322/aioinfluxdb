@@ -4,6 +4,7 @@ import http
 from typing import Iterable, Mapping, Optional, Union, overload
 
 import aiohttp
+import orjson
 from isal import igzip as gzip
 
 from aioinfluxdb import constants, serializer, types
@@ -40,6 +41,46 @@ class AioHTTPClient(Client):
     async def ping(self) -> bool:
         res = await self._session.get('/ping')
         return res.status in (http.HTTPStatus.OK, http.HTTPStatus.NO_CONTENT)
+
+    async def list_buckets(
+        self,
+        *,
+        after: Optional[str] = None,
+        bucket_id: Optional[str] = None,
+        limit: Optional[int] = None,
+        name: Optional[str] = None,
+        offset: int = 0,
+        organization: Optional[str] = None,
+        organization_id: Optional[str] = None,
+    ) -> Iterable[types.Bucket]:
+        params = {
+            k: v
+            for k, v in dict(
+                after=after,
+                id=bucket_id,
+                limit=limit,
+                name=name,
+                offset=offset,
+                org=organization,
+                orgID=organization_id,
+            ).items()
+            if v is not None
+        }
+        headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
+
+        if self._gzip:
+            headers[aiohttp.hdrs.ACCEPT_ENCODING] = 'gzip'
+
+        res = await self._session.get(
+            '/api/v2/buckets',
+            params=params,
+            headers=headers,
+        )
+        # TODO: error handling
+        res.raise_for_status()
+        # TODO: Utilize `links`
+        buckets = await res.json(loads=orjson.loads)
+        return map(types.Bucket.from_dict, buckets['buckets'])
 
     @overload
     async def write(

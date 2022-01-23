@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import Iterable, Union, overload
+from typing import Iterable, Optional, Union, overload
 
 from aioinfluxdb import constants, types
 
@@ -27,6 +27,20 @@ class Client(metaclass=ABCMeta):
     async def ping(self) -> bool:
         """`true` if pong received"""
         raise NotImplementedError
+
+    @abstractmethod
+    async def list_buckets(
+        self,
+        *,
+        after: Optional[str] = None,
+        bucket_id: Optional[str] = None,
+        limit: Optional[int] = None,
+        name: Optional[str] = None,
+        offset: int = 0,
+        organization: Optional[str] = None,
+        organization_id: Optional[str] = None,
+    ) -> Iterable[types.Bucket]:
+        pass
 
     @overload
     async def write(
