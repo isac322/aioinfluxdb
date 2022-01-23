@@ -36,6 +36,8 @@ python = "^3.7"
 aiohttp = {version = "^3.8.1", extras = ["speedups"]}
 typing-extensions = "^4.0.1"
 isal = "^0.11.1"
+orjson = "^3.6.6"
+python-dateutil = "^2.8.2"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.931"
