@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import http
-from typing import Iterable, Mapping, Optional, Union, overload
+from typing import Iterable, Mapping, Optional, Union
 
 import aiohttp
 import orjson
@@ -167,28 +167,6 @@ class AioHTTPClient(Client):
         )
         res.raise_for_status()
 
-    @overload
-    async def write(
-        self,
-        *,
-        bucket: str,
-        organization: str,
-        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
-        record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
-    ) -> None:
-        pass
-
-    @overload
-    async def write(
-        self,
-        *,
-        bucket: str,
-        organization_id: str,
-        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
-        record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
-    ) -> None:
-        pass
-
     async def write(
         self,
         *,
@@ -218,38 +196,6 @@ class AioHTTPClient(Client):
             data=data,
         )
         res.raise_for_status()
-
-    @overload
-    async def write_multiple(
-        self,
-        *,
-        bucket: str,
-        organization: str,
-        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
-        records: Union[
-            Iterable[str],
-            Iterable[types.Record],
-            Iterable[types.MinimalRecordTuple],
-            Iterable[types.RecordTuple],
-        ],
-    ) -> None:
-        pass
-
-    @overload
-    async def write_multiple(
-        self,
-        *,
-        bucket: str,
-        organization_id: str,
-        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
-        records: Union[
-            Iterable[str],
-            Iterable[types.Record],
-            Iterable[types.MinimalRecordTuple],
-            Iterable[types.RecordTuple],
-        ],
-    ) -> None:
-        pass
 
     async def write_multiple(
         self,
