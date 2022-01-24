@@ -85,7 +85,7 @@ class AioHTTPClient(Client):
         *,
         after: Optional[str] = None,
         bucket_id: Optional[str] = None,
-        limit: Optional[int] = None,
+        limit: int = 20,
         name: Optional[str] = None,
         offset: int = 0,
         organization: Optional[str] = None,
