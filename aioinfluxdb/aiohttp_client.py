@@ -120,6 +120,53 @@ class AioHTTPClient(Client):
         buckets = await res.json(loads=orjson.loads)
         return map(types.Bucket.from_json, buckets['buckets'])
 
+    async def create_bucket(
+        self,
+        *,
+        description: Optional[str] = None,
+        name: str,
+        organization_id: str,
+        retention_rules: Iterable[types.RetentionRule, ...] = (),
+        rp: Optional[str] = None,
+        schema_type: Optional[str] = None,
+    ) -> types.Bucket:
+        data = dict(
+            name=name,
+            orgID=organization_id,
+        )
+        retention_rules = tuple(retention_rules)
+        if len(retention_rules) != 0:
+            data['retentionRules'] = tuple(map(types.RetentionRule.to_json, retention_rules))
+        if description is not None:
+            data['description'] = description
+        if rp is not None:
+            data['rp'] = rp
+        if schema_type is not None:
+            data['schemaType'] = schema_type
+        ser_data = orjson.dumps(data)
+
+        headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
+        if self._gzip:
+            # bucket creation does not support gzip body
+            headers[aiohttp.hdrs.ACCEPT_ENCODING] = 'gzip'
+
+        res = await self._session.post(
+            '/api/v2/buckets',
+            data=ser_data,
+            headers=headers,
+        )
+        res.raise_for_status()
+        return types.Bucket.from_json(await res.json(loads=orjson.loads))
+
+    async def delete_bucket(self, *, bucket_id: str) -> None:
+        headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
+
+        res = await self._session.delete(
+            f'/api/v2/buckets/{bucket_id}',
+            headers=headers,
+        )
+        res.raise_for_status()
+
     @overload
     async def write(
         self,

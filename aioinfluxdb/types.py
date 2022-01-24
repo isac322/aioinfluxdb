@@ -53,6 +53,15 @@ class RetentionRule:
             type=data['type'],
         )
 
+    def to_json(self) -> _RetentionRule:
+        ret = _RetentionRule(
+            everySeconds=self.every_seconds,
+            type=self.type,
+        )
+        if self.shard_group_duration_seconds is not None:
+            ret['shardGroupDurationSeconds'] = self.shard_group_duration_seconds
+        return ret
+
 
 class _Label(TypedDict):
     id: str

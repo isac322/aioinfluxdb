@@ -55,6 +55,23 @@ class Client(metaclass=ABCMeta):
     ) -> Iterable[types.Bucket]:
         pass
 
+    @abstractmethod
+    async def create_bucket(
+        self,
+        *,
+        description: Optional[str] = None,
+        name: str,
+        organization_id: str,
+        retention_rules: Iterable[types.RetentionRule, ...] = (),
+        rp: Optional[str] = None,
+        schema_type: Optional[str] = None,
+    ) -> types.Bucket:
+        pass
+
+    @abstractmethod
+    async def delete_bucket(self, *, bucket_id: str) -> None:
+        pass
+
     @overload
     async def write(
         self,
