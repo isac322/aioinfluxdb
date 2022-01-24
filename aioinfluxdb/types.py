@@ -33,37 +33,7 @@ class Record(NamedTuple):
         return f'<{self.__class__.__name__} {body}>'
 
 
-class _Link(TypedDict):
-    labels: str
-    members: str
-    org: str
-    owners: str
-    self: str
-    write: str
-
-
-@dataclass(frozen=True)
-class Link:
-    labels: str
-    members: str
-    organization: str
-    owners: str
-    self: str
-    write: str
-
-    @classmethod
-    def from_json(cls, data: _Link) -> Link:
-        return cls(
-            labels=data['labels'],
-            members=data['members'],
-            organization=data['org'],
-            owners=data['owners'],
-            self=data['self'],
-            write=data['write'],
-        )
-
-
-class _RetentionRule(TypedDict):
+class _RetentionRule(TypedDict, total=False):
     everySeconds: int
     shardGroupDurationSeconds: int
     type: str
@@ -113,7 +83,6 @@ class _Bucket(TypedDict, total=False):
     description: str
     id: str
     labels: Iterable[_Label, ...]
-    links: _Link
     name: str
     orgID: str
     retentionRules: Iterable[_RetentionRule, ...]
@@ -129,7 +98,6 @@ class Bucket:
     description: Optional[str]
     id: Optional[str]
     labels: Tuple[Label, ...]
-    links: Optional[Link]
     name: str
     organization_id: Optional[str]
     retention_rules: Tuple[RetentionRule, ...]
@@ -145,7 +113,6 @@ class Bucket:
             description=data.get('description'),
             id=data.get('id'),
             labels=tuple(map(Label.from_json, data.get('labels', ()))),
-            links=Link.from_json(data['links']) if 'links' in data else None,
             name=data['name'],
             organization_id=data.get('orgID'),
             retention_rules=tuple(map(RetentionRule.from_json, data['retentionRules'])),
