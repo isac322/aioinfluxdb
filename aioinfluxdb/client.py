@@ -56,6 +56,19 @@ class Client(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    async def create_organization(
+        self,
+        *,
+        description: Optional[str] = None,
+        name: str,
+    ) -> types.Organization:
+        pass
+
+    @abstractmethod
+    async def delete_organization(self, *, organization_id: str) -> None:
+        pass
+
+    @abstractmethod
     async def create_bucket(
         self,
         *,

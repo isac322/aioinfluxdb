@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import random
+
 import pytest
 
 from aioinfluxdb import AioHTTPClient, constants
@@ -34,6 +36,26 @@ class TestAioHTTPClient:
         buckets = tuple(filter(lambda b: b.type is constants.BucketType.User, await client.list_buckets()))
         assert len(buckets) == 1
         assert buckets[0].name == influxdb_config.bucket
+
+    async def test_create_organization(self, influxdb_config) -> None:
+        client = AioHTTPClient(
+            host=influxdb_config.host,
+            token=influxdb_config.admin_token,
+            port=influxdb_config.port,
+        )
+        org_name = f'org-{random.random() * 100}'
+        org = await client.create_organization(name=org_name)
+        assert org.name == org_name
+
+    async def test_delete_organization(self, influxdb_config) -> None:
+        client = AioHTTPClient(
+            host=influxdb_config.host,
+            token=influxdb_config.admin_token,
+            port=influxdb_config.port,
+        )
+        org_name = f'org-{random.random() * 100}'
+        org = await client.create_organization(name=org_name)
+        await client.delete_organization(organization_id=org.id)
 
     async def test_create_bucket(self, influxdb_config) -> None:
         client = AioHTTPClient(

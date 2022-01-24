@@ -80,6 +80,36 @@ class AioHTTPClient(Client):
         buckets = await res.json(loads=orjson.loads)
         return map(types.Organization.from_json, buckets['orgs'])
 
+    async def create_organization(self, *, description: Optional[str] = None, name: str) -> types.Organization:
+        data = dict(name=name)
+        if description is not None:
+            data['description'] = description
+        ser_data = orjson.dumps(data)
+
+        headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
+        if self._gzip:
+            # bucket creation does not support gzip body
+            headers[aiohttp.hdrs.ACCEPT_ENCODING] = 'gzip'
+
+        res = await self._session.post(
+            '/api/v2/orgs',
+            data=ser_data,
+            headers=headers,
+        )
+        # TODO: error handling
+        res.raise_for_status()
+        return types.Organization.from_json(await res.json(loads=orjson.loads))
+
+    async def delete_organization(self, *, organization_id: str) -> None:
+        headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
+
+        res = await self._session.delete(
+            f'/api/v2/orgs/{organization_id}',
+            headers=headers,
+        )
+        # TODO: error handling
+        res.raise_for_status()
+
     async def list_buckets(
         self,
         *,
