@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable, NamedTuple, Optional, Tuple, Union, Mapping, Any
+from typing import Any, Iterable, Mapping, NamedTuple, Optional, Tuple, Union
 
 from dateutil.parser import isoparse
 from typing_extensions import TypeAlias, TypedDict
