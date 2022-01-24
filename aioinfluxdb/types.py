@@ -154,3 +154,33 @@ class Bucket:
             type=constants.BucketType(data.get('type', constants.BucketType.User)),
             updated_at=isoparse(data['updatedAt']) if 'updatedAt' in data else None,
         )
+
+
+class _Organization(TypedDict, total=False):
+    createdAt: str
+    description: str
+    id: str
+    name: str
+    status: str
+    updatedAt: str
+
+
+@dataclass(frozen=True)
+class Organization:
+    created_at: Optional[datetime]
+    description: Optional[str]
+    id: Optional[str]
+    name: str
+    status: constants.OrganizationStatus
+    updated_at: Optional[datetime]
+
+    @classmethod
+    def from_json(cls, data: _Organization) -> Organization:
+        return cls(
+            created_at=isoparse(data['createdAt']) if 'createdAt' in data else None,
+            description=data.get('description'),
+            id=data.get('id'),
+            name=data['name'],
+            status=constants.OrganizationStatus(data.get('status', constants.OrganizationStatus.Active)),
+            updated_at=isoparse(data['updatedAt']) if 'updatedAt' in data else None,
+        )

@@ -46,6 +46,44 @@ class AioHTTPClient(Client):
         res = await self._session.get('/ping')
         return res.status in (http.HTTPStatus.OK, http.HTTPStatus.NO_CONTENT)
 
+    async def list_organizations(
+        self,
+        *,
+        descending: bool = False,
+        limit: int = 20,
+        offset: int = 0,
+        organization_name: Optional[str] = None,
+        organization_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+    ) -> Iterable[types.Organization]:
+        params = {
+            k: v
+            for k, v in dict(
+                descending=int(descending),
+                limit=limit,
+                offset=offset,
+                org=organization_name,
+                orgID=organization_id,
+                userID=user_id,
+            ).items()
+            if v is not None
+        }
+        headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
+
+        if self._gzip:
+            headers[aiohttp.hdrs.ACCEPT_ENCODING] = 'gzip'
+
+        res = await self._session.get(
+            '/api/v2/orgs',
+            params=params,
+            headers=headers,
+        )
+        # TODO: error handling
+        res.raise_for_status()
+        # TODO: Utilize `links`
+        buckets = await res.json(loads=orjson.loads)
+        return map(types.Organization.from_json, buckets['orgs'])
+
     async def list_buckets(
         self,
         *,

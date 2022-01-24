@@ -15,6 +15,16 @@ class TestAioHTTPClient:
         )
         assert await client.ping() is True
 
+    async def test_list_organizations(self, influxdb_config) -> None:
+        client = AioHTTPClient(
+            host=influxdb_config.host,
+            token=influxdb_config.admin_token,
+            port=influxdb_config.port,
+        )
+        orgs = tuple(await client.list_organizations())
+        assert len(orgs) == 1
+        assert orgs[0].name == influxdb_config.org
+
     async def test_list_buckets(self, influxdb_config) -> None:
         client = AioHTTPClient(
             host=influxdb_config.host,

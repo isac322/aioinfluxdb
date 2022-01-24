@@ -22,3 +22,8 @@ class BucketSchemaType(str, Enum):
 class BucketType(str, Enum):
     User = 'user'
     System = 'system'
+
+
+class OrganizationStatus(str, Enum):
+    Active = 'active'
+    Inactive = 'inactive'

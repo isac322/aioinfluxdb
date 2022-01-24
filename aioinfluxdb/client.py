@@ -29,6 +29,19 @@ class Client(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
+    async def list_organizations(
+        self,
+        *,
+        descending: bool = False,
+        limit: int = 20,
+        offset: int = 0,
+        organization_name: Optional[str] = None,
+        organization_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+    ) -> Iterable[types.Organization]:
+        pass
+
+    @abstractmethod
     async def list_buckets(
         self,
         *,
