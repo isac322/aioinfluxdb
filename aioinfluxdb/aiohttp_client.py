@@ -208,6 +208,17 @@ class AioHTTPClient(Client):
         )
         res.raise_for_status()
 
+    async def get_bucket(self, *, bucket_id: str) -> Optional[types.Bucket]:
+        headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
+
+        res = await self._session.get(
+            f'/api/v2/buckets/{bucket_id}',
+            headers=headers,
+        )
+        # TODO: error handling
+        res.raise_for_status()
+        return types.Bucket.from_json(await res.json(loads=orjson.loads))
+
     async def write(
         self,
         *,

@@ -93,6 +93,10 @@ class Client(metaclass=ABCMeta):
     async def delete_bucket(self, *, bucket_id: str) -> None:
         pass
 
+    @abstractmethod
+    async def get_bucket(self, *, bucket_id: str) -> Optional[types.Bucket]:
+        pass
+
     @overload
     async def write(
         self,

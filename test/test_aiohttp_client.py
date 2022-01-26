@@ -55,6 +55,14 @@ class TestAioHTTPClient:
         except Exception:
             pass
 
+    async def test_delete_bucket(self, aiohttp_client: AioHTTPClient, bucket: types.Bucket) -> None:
+        await aiohttp_client.delete_bucket(bucket_id=bucket.id)
+
+    async def test_get_bucket(self, aiohttp_client: AioHTTPClient, bucket: types.Bucket) -> None:
+        b = await aiohttp_client.get_bucket(bucket_id=bucket.id)
+        assert b.id == bucket.id
+        assert b.name == bucket.name
+
     async def test_write(self, aiohttp_client: AioHTTPClient, bucket: types.Bucket) -> None:
         await aiohttp_client.write(
             bucket=bucket.id,
