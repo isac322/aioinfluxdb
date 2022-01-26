@@ -4,6 +4,7 @@ import asyncio
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import Iterable, Optional, Union, overload
+from typing_extensions import final
 
 from aioinfluxdb import constants, types
 
@@ -15,13 +16,16 @@ class _Sentinel(Enum):
 class Client(metaclass=ABCMeta):
     _token: str
     _gzip: bool
+    _closed: bool
 
     def __init__(self, token: str, gzip: bool = True) -> None:
         self._token = token
         self._gzip = gzip
+        self._closed = False
 
     def __del__(self) -> None:
-        asyncio.create_task(self.close())
+        if not self._closed:
+            asyncio.create_task(self.close())
 
     @abstractmethod
     async def ping(self) -> bool:
@@ -168,8 +172,13 @@ class Client(metaclass=ABCMeta):
     ) -> None:
         raise NotImplementedError
 
-    @abstractmethod
+    @final
     async def close(self) -> None:
+        await self._close()
+        self._closed = True
+
+    @abstractmethod
+    async def _close(self) -> None:
         raise NotImplementedError
 
     @property

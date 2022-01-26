@@ -281,5 +281,5 @@ class AioHTTPClient(Client):
             ret['org'] = organization
         return ret
 
-    async def close(self) -> None:
+    async def _close(self) -> None:
         await self._session.close()
