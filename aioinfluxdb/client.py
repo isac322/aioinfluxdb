@@ -69,6 +69,10 @@ class Client(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    async def get_organization(self, *, organization_id: str) -> Optional[types.Organization]:
+        pass
+
+    @abstractmethod
     async def delete_organization(self, *, organization_id: str) -> None:
         pass
 

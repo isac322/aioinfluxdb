@@ -110,6 +110,17 @@ class AioHTTPClient(Client):
         # TODO: error handling
         res.raise_for_status()
 
+    async def get_organization(self, *, organization_id: str) -> Optional[types.Organization]:
+        headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
+
+        res = await self._session.get(
+            f'/api/v2/orgs/{organization_id}',
+            headers=headers,
+        )
+        # TODO: error handling
+        res.raise_for_status()
+        return types.Organization.from_json(await res.json(loads=orjson.loads))
+
     async def list_buckets(
         self,
         *,

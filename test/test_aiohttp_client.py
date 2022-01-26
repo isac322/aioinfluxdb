@@ -37,6 +37,11 @@ class TestAioHTTPClient:
     async def test_delete_organization(self, aiohttp_client: AioHTTPClient, organization: types.Organization) -> None:
         await aiohttp_client.delete_organization(organization_id=organization.id)
 
+    async def test_get_organization(self, aiohttp_client: AioHTTPClient, organization: types.Organization) -> None:
+        org = await aiohttp_client.get_organization(organization_id=organization.id)
+        assert org.id == organization.id
+        assert org.name == organization.name
+
     async def test_create_bucket(
         self,
         aiohttp_client: AioHTTPClient,
