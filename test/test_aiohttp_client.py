@@ -1,93 +1,65 @@
 from __future__ import annotations
 
-import random
-
 import pytest
 
-from aioinfluxdb import AioHTTPClient, constants
+from aioinfluxdb import AioHTTPClient, constants, types
 
 
 @pytest.mark.asyncio
 class TestAioHTTPClient:
-    async def test_ping(self, influxdb_config) -> None:
-        client = AioHTTPClient(
-            host=influxdb_config.host,
-            token=influxdb_config.admin_token,
-            port=influxdb_config.port,
-        )
-        assert await client.ping() is True
+    async def test_ping(self, aiohttp_client: AioHTTPClient) -> None:
+        assert await aiohttp_client.ping() is True
 
-    async def test_list_organizations(self, influxdb_config) -> None:
-        client = AioHTTPClient(
-            host=influxdb_config.host,
-            token=influxdb_config.admin_token,
-            port=influxdb_config.port,
-        )
-        orgs = tuple(await client.list_organizations())
+    async def test_list_organizations(self, aiohttp_client: AioHTTPClient, organization: types.Organization) -> None:
+        orgs = tuple(await aiohttp_client.list_organizations(organization_name=organization.name))
         assert len(orgs) == 1
-        assert orgs[0].name == influxdb_config.org
+        assert orgs[0].name == organization.name
 
-    async def test_list_buckets(self, influxdb_config) -> None:
-        client = AioHTTPClient(
-            host=influxdb_config.host,
-            token=influxdb_config.admin_token,
-            port=influxdb_config.port,
+    async def test_list_buckets(self, aiohttp_client: AioHTTPClient, bucket: types.Bucket) -> None:
+        buckets = tuple(
+            filter(
+                lambda b: b.type is constants.BucketType.User,
+                await aiohttp_client.list_buckets(organization_id=bucket.organization_id),
+            )
         )
-        buckets = tuple(filter(lambda b: b.type is constants.BucketType.User, await client.list_buckets()))
         assert len(buckets) == 1
-        assert buckets[0].name == influxdb_config.bucket
+        assert buckets[0].id == bucket.id
+        assert buckets[0].name == bucket.name
 
-    async def test_create_organization(self, influxdb_config) -> None:
-        client = AioHTTPClient(
-            host=influxdb_config.host,
-            token=influxdb_config.admin_token,
-            port=influxdb_config.port,
-        )
-        org_name = f'org-{random.random() * 100}'
-        org = await client.create_organization(name=org_name)
-        assert org.name == org_name
+    async def test_create_organization(self, aiohttp_client: AioHTTPClient, organization_name: str) -> None:
+        org = await aiohttp_client.create_organization(name=organization_name)
+        assert org.name == organization_name
+        try:
+            await aiohttp_client.delete_organization(organization_id=org.id)
+        except Exception:
+            pass
 
-    async def test_delete_organization(self, influxdb_config) -> None:
-        client = AioHTTPClient(
-            host=influxdb_config.host,
-            token=influxdb_config.admin_token,
-            port=influxdb_config.port,
-        )
-        org_name = f'org-{random.random() * 100}'
-        org = await client.create_organization(name=org_name)
-        await client.delete_organization(organization_id=org.id)
+    async def test_delete_organization(self, aiohttp_client: AioHTTPClient, organization: types.Organization) -> None:
+        await aiohttp_client.delete_organization(organization_id=organization.id)
 
-    async def test_create_bucket(self, influxdb_config) -> None:
-        client = AioHTTPClient(
-            host=influxdb_config.host,
-            token=influxdb_config.admin_token,
-            port=influxdb_config.port,
-        )
-        org_id = next(iter(await client.list_organizations(organization_name=influxdb_config.org))).id
-        bucket = await client.create_bucket(name='test_bucket', organization_id=org_id)
-        assert bucket.name == 'test_bucket'
-        await client.delete_bucket(bucket_id=bucket.id)
+    async def test_create_bucket(
+        self,
+        aiohttp_client: AioHTTPClient,
+        organization: types.Organization,
+        bucket_name: str,
+    ) -> None:
+        bucket = await aiohttp_client.create_bucket(name=bucket_name, organization_id=organization.id)
+        assert bucket.name == bucket_name
+        try:
+            await aiohttp_client.delete_bucket(bucket_id=bucket.id)
+        except Exception:
+            pass
 
-    async def test_write(self, influxdb_config) -> None:
-        client = AioHTTPClient(
-            host=influxdb_config.host,
-            token=influxdb_config.admin_token,
-            port=influxdb_config.port,
-        )
-        await client.write(
-            bucket=influxdb_config.bucket,
-            organization=influxdb_config.org,
+    async def test_write(self, aiohttp_client: AioHTTPClient, bucket: types.Bucket) -> None:
+        await aiohttp_client.write(
+            bucket=bucket.id,
+            organization_id=bucket.organization_id,
             record=('test', (('a', 1),)),
         )
 
-    async def test_write_multiple(self, influxdb_config) -> None:
-        client = AioHTTPClient(
-            host=influxdb_config.host,
-            token=influxdb_config.admin_token,
-            port=influxdb_config.port,
-        )
-        await client.write_multiple(
-            bucket=influxdb_config.bucket,
-            organization=influxdb_config.org,
+    async def test_write_multiple(self, aiohttp_client: AioHTTPClient, bucket: types.Bucket) -> None:
+        await aiohttp_client.write_multiple(
+            bucket=bucket.id,
+            organization_id=bucket.organization_id,
             records=(('test', (('a', 1),)), ('test', (('b', 2),))),
         )
