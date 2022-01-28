@@ -91,10 +91,10 @@ class _Bucket(TypedDict, total=False):
     createdAt: str
     description: str
     id: str
-    labels: Iterable[_Label, ...]
+    labels: Iterable[_Label]
     name: str
     orgID: str
-    retentionRules: Iterable[_RetentionRule, ...]
+    retentionRules: Iterable[_RetentionRule]
     rp: str
     schemaType: str
     type: str

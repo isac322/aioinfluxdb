@@ -83,7 +83,7 @@ class Client(metaclass=ABCMeta):
         description: Optional[str] = None,
         name: str,
         organization_id: str,
-        retention_rules: Iterable[types.RetentionRule, ...] = (),
+        retention_rules: Iterable[types.RetentionRule] = (),
         rp: Optional[str] = None,
         schema_type: Optional[str] = None,
     ) -> types.Bucket:
