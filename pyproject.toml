@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aioinfluxdb"
-version = "0.1.2"
+version = "0.2.0"
 description = "InfluxDB v2 Python SDK with asyncio support"
 authors = ["Byeonghoon Yoo <bh322yoo@gmail.com>"]
 readme = "README.md"
