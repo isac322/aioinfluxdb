@@ -11,43 +11,47 @@ performance. and [aioinflux](https://pypi.org/project/aioinflux/) does not suppo
 
 ## Feature table
 
-| Feature               | Sub category                                                 | ✅ / 🚧 |
-|:----------------------|:-------------------------------------------------------------|:------:|
-| Query                 | Query Data                                                   |   🚧   |
-| Query                 | Analyzer Flux Query                                          |   🚧   |
-| Query                 | Generate AST from Query                                      |   🚧   |
-| Query                 | Retrieve query suggestions                                   |   🚧   |
-| Query                 | Retrieve query suggestions <br /> for a branching suggestion |   🚧   |
-| Write                 |                                                              |   ✅    |
-| Buckets               |                                                              |   🚧   |
-| Dashboards            |                                                              |   🚧   |
-| Tasks                 |                                                              |   🚧   |
-| Resources             |                                                              |   🚧   |
-| Authorizations        |                                                              |   🚧   |
-| Organizations         |                                                              |   🚧   |
-| Users                 |                                                              |   🚧   |
-| Health                |                                                              |   🚧   |
-| Ping                  |                                                              |   ✅    |
-| Ready                 |                                                              |   🚧   |
-| Routes                |                                                              |   🚧   |
-| Backup                |                                                              |   🚧   |
-| Cells                 |                                                              |   🚧   |
-| Checks                |                                                              |   🚧   |
-| DBRPs                 |                                                              |   🚧   |
-| Delete                |                                                              |   🚧   |
-| Labels                |                                                              |   🚧   |
-| NotificationEndpoints |                                                              |   🚧   |
-| NotificationRules     |                                                              |   🚧   |
-| Restore               |                                                              |   🚧   |
-| Rules                 |                                                              |   🚧   |
-| Scraper Targets       |                                                              |   🚧   |
-| Secrets               |                                                              |   🚧   |
-| Setup                 |                                                              |   🚧   |
-| Signin                |                                                              |   🚧   |
-| Signout               |                                                              |   🚧   |
-| Sources               |                                                              |   🚧   |
-| Telegraf Plugins      |                                                              |   🚧   |
-| Telegrafs             |                                                              |   🚧   |
-| Templates             |                                                              |   🚧   |
-| Variables             |                                                              |   🚧   |
-| Views                 |                                                              |   🚧   |
+| Feature               | Sub category                                                 | ✅ / ⚠ / 🚧 |
+|:----------------------|:-------------------------------------------------------------|:----------:|
+| Query                 | Query Data                                                   |     ✅      |
+| Query                 | Analyzer Flux Query                                          |     🚧     |
+| Query                 | Generate AST from Query                                      |     🚧     |
+| Query                 | Retrieve query suggestions                                   |     🚧     |
+| Query                 | Retrieve query suggestions <br /> for a branching suggestion |     🚧     |
+| Write                 |                                                              |     ✅      |
+| Buckets               |                                                              |     ⚠      |
+| Dashboards            |                                                              |     🚧     |
+| Tasks                 |                                                              |     🚧     |
+| Resources             |                                                              |     🚧     |
+| Authorizations        |                                                              |     🚧     |
+| Organizations         |                                                              |     ⚠      |
+| Users                 |                                                              |     🚧     |
+| Health                |                                                              |     🚧     |
+| Ping                  |                                                              |     ✅      |
+| Ready                 |                                                              |     🚧     |
+| Routes                |                                                              |     🚧     |
+| Backup                |                                                              |     🚧     |
+| Cells                 |                                                              |     🚧     |
+| Checks                |                                                              |     🚧     |
+| DBRPs                 |                                                              |     🚧     |
+| Delete                |                                                              |     🚧     |
+| Labels                |                                                              |     🚧     |
+| NotificationEndpoints |                                                              |     🚧     |
+| NotificationRules     |                                                              |     🚧     |
+| Restore               |                                                              |     🚧     |
+| Rules                 |                                                              |     🚧     |
+| Scraper Targets       |                                                              |     🚧     |
+| Secrets               |                                                              |     🚧     |
+| Setup                 |                                                              |     🚧     |
+| Signin                |                                                              |     🚧     |
+| Signout               |                                                              |     🚧     |
+| Sources               |                                                              |     🚧     |
+| Telegraf Plugins      |                                                              |     🚧     |
+| Telegrafs             |                                                              |     🚧     |
+| Templates             |                                                              |     🚧     |
+| Variables             |                                                              |     🚧     |
+| Views                 |                                                              |     🚧     |
+
+---
+
+This project borrows some de/serialization code from [influxdb-client](https://github.com/influxdata/influxdb-client-python).
