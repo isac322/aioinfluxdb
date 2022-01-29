@@ -37,7 +37,8 @@ aiohttp = {version = "^3.8.1", extras = ["speedups"]}
 typing-extensions = "^4.0.1"
 isal = "^0.11.1"
 orjson = "^3.6.6"
-python-dateutil = "^2.8.2"
+ciso8601 = "^2.2.0"
+aiocsv = "^1.2.1"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.931"
@@ -46,7 +47,7 @@ pytest = "^6.2.5"
 pytest-asyncio = "^0.17.2"
 pytest-xdist = "^2.5.0"
 pytest-cov = "^3.0.0"
-types-python-dateutil = "^2.8.8"
+pytest-aiohttp = "^1.0.3"
 
 
 [build-system]

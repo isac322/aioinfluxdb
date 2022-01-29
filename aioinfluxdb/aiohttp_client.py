@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import http
-from typing import Iterable, Mapping, Optional, Union
+from datetime import datetime
+from typing import Any, AsyncIterable, Iterable, List, Mapping, Optional, Union
 
 import aiohttp
 import orjson
+from aiocsv.protocols import WithAsyncRead
 from isal import igzip as gzip
 
 from aioinfluxdb import constants, serializer, types
 from aioinfluxdb.client import Client, _Sentinel
+from aioinfluxdb.csv_parser import FluxCsvParser
+from aioinfluxdb.flux_table import FluxRecord
 
 
 class AioHTTPClient(Client):
@@ -284,6 +288,54 @@ class AioHTTPClient(Client):
         )
         res.raise_for_status()
 
+    async def flux_query(
+        self,
+        *,
+        organization: Union[str, _Sentinel] = _Sentinel.MISSING,
+        organization_id: Union[str, _Sentinel] = _Sentinel.MISSING,
+        flux_body: str,
+        now: Optional[datetime] = None,
+        params: Optional[Mapping[str, Any]] = None,
+    ) -> AsyncIterable[FluxRecord]:
+        headers = {
+            aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}',
+            aiohttp.hdrs.CONTENT_TYPE: 'application/json',
+            aiohttp.hdrs.ACCEPT: 'application/csv',
+        }
+
+        if self._gzip:
+            # flux query does not support gzip body
+            headers[aiohttp.hdrs.ACCEPT_ENCODING] = 'gzip'
+
+        body = dict(
+            dialect=dict(
+                annotations=('group', 'datatype', 'default'),
+                dateTimeFormat='RFC3339Nano',
+            ),
+            query=flux_body,
+            type='flux',
+        )
+        if now is not None:
+            body['now'] = now
+        if params is not None:
+            body['params'] = params
+
+        ser_body = orjson.dumps(body)
+
+        res = await self._session.post(
+            '/api/v2/query',
+            params=dict(orgID=organization_id) if organization_id is not _Sentinel.MISSING else dict(org=organization),
+            headers=headers,
+            data=ser_body,
+        )
+        res.raise_for_status()
+
+        parser = FluxCsvParser(
+            body_reader=_WithAsyncReadAdapter(res),
+            serialization_mode=constants.FluxSerializationMode.stream,
+        )
+        return parser.generator()
+
     @classmethod
     def _build_query_params(
         cls,
@@ -305,3 +357,36 @@ class AioHTTPClient(Client):
 
     async def _close(self) -> None:
         await self._session.close()
+
+
+class _WithAsyncReadAdapter(WithAsyncRead):
+    _res: aiohttp.ClientResponse
+    _encoding: str
+
+    def __init__(self, res: aiohttp.ClientResponse) -> None:
+        super().__init__()
+        self._res = res
+        self._encoding = res.get_encoding()
+
+    async def read(self, __size: int) -> str:
+        encoded_length = 0
+        chunks: List[str] = []
+
+        while encoded_length < __size and not self._res.content.at_eof():
+            buf = await self._res.content.read(__size - encoded_length)
+            try:
+                chunk = buf.decode(self._encoding)
+            except UnicodeDecodeError:
+                while True:
+                    buf += await self._res.content.read(1)
+                    try:
+                        chunk = buf.decode(self._encoding)
+                        break
+                    except UnicodeDecodeError:
+                        pass
+
+            chunks.append(chunk)
+            encoded_length += len(chunk)
+        self._res.close()
+
+        return ''.join(chunks)

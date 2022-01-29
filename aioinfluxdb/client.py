@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import asyncio
 from abc import ABCMeta, abstractmethod
+from datetime import datetime
 from enum import Enum
-from typing import Iterable, Optional, Union, overload
+from typing import Any, AsyncIterable, Iterable, Mapping, Optional, Union, overload
+
 from typing_extensions import final
 
 from aioinfluxdb import constants, types
+from aioinfluxdb.flux_table import FluxRecord
 
 
 class _Sentinel(Enum):
@@ -178,6 +181,26 @@ class Client(metaclass=ABCMeta):
             Iterable[types.RecordTuple],
         ],
     ) -> None:
+        raise NotImplementedError
+
+    @overload
+    async def flux_query(self, *, organization: str, flux_body: str) -> None:
+        pass
+
+    @overload
+    async def flux_query(self, *, organization_id: str, flux_body: str) -> None:
+        pass
+
+    @abstractmethod
+    async def flux_query(
+        self,
+        *,
+        organization: Union[str, _Sentinel] = _Sentinel.MISSING,
+        organization_id: Union[str, _Sentinel] = _Sentinel.MISSING,
+        flux_body: str,
+        now: Optional[datetime] = None,
+        params: Optional[Mapping[str, Any]] = None,
+    ) -> AsyncIterable[FluxRecord]:
         raise NotImplementedError
 
     @final

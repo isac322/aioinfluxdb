@@ -35,7 +35,7 @@ def influxdb_config() -> InfluxDBConfig:
 
 
 @pytest_asyncio.fixture(scope='function')
-async def aiohttp_client(influxdb_config) -> AioHTTPClient:
+async def aiohttp_influx(influxdb_config) -> AioHTTPClient:
     client = AioHTTPClient(
         host=influxdb_config.host,
         token=influxdb_config.admin_token,
@@ -51,13 +51,13 @@ def organization_name() -> str:
 
 
 @pytest_asyncio.fixture(scope='function')
-async def organization(aiohttp_client: AioHTTPClient, organization_name: str) -> types.Organization:
-    org = await aiohttp_client.create_organization(name=organization_name)
+async def organization(aiohttp_influx: AioHTTPClient, organization_name: str) -> types.Organization:
+    org = await aiohttp_influx.create_organization(name=organization_name)
     try:
         yield org
     finally:
         try:
-            await aiohttp_client.delete_organization(organization_id=org.id)
+            await aiohttp_influx.delete_organization(organization_id=org.id)
         # allow only when org not exist
         except Exception:
             pass
@@ -70,8 +70,8 @@ def bucket_name() -> str:
 
 @pytest_asyncio.fixture(scope='function')
 async def bucket(
-    aiohttp_client: AioHTTPClient,
+    aiohttp_influx: AioHTTPClient,
     organization: types.Organization,
     bucket_name: str,
 ) -> types.Bucket:
-    return await aiohttp_client.create_bucket(name=bucket_name, organization_id=organization.id)
+    return await aiohttp_influx.create_bucket(name=bucket_name, organization_id=organization.id)

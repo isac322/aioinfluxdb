@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Iterable, Mapping, NamedTuple, Optional, Tuple, Union
+from typing import Any, Callable, Iterable, List, Mapping, NamedTuple, Optional, Tuple, Union
 
-from dateutil.parser import isoparse
+import ciso8601
 from typing_extensions import TypeAlias, TypedDict
 
 from aioinfluxdb import constants
@@ -118,7 +118,7 @@ class Bucket:
     @classmethod
     def from_json(cls, data: _Bucket) -> Bucket:
         return cls(
-            created_at=isoparse(data['createdAt']) if 'createdAt' in data else None,
+            created_at=ciso8601.parse_datetime(data['createdAt']) if 'createdAt' in data else None,
             description=data.get('description'),
             id=data.get('id'),
             labels=tuple(map(Label.from_json, data.get('labels', ()))),
@@ -128,7 +128,7 @@ class Bucket:
             rp=data.get('rp'),
             schema_type=constants.BucketSchemaType(data['schemaType']) if 'schemaType' in data else None,
             type=constants.BucketType(data.get('type', constants.BucketType.User)),
-            updated_at=isoparse(data['updatedAt']) if 'updatedAt' in data else None,
+            updated_at=ciso8601.parse_datetime(data['updatedAt']) if 'updatedAt' in data else None,
         )
 
 
@@ -153,10 +153,24 @@ class Organization:
     @classmethod
     def from_json(cls, data: _Organization) -> Organization:
         return cls(
-            created_at=isoparse(data['createdAt']) if 'createdAt' in data else None,
+            created_at=ciso8601.parse_datetime(data['createdAt']) if 'createdAt' in data else None,
             description=data.get('description'),
             id=data.get('id'),
             name=data['name'],
             status=constants.OrganizationStatus(data.get('status', constants.OrganizationStatus.Active)),
-            updated_at=isoparse(data['updatedAt']) if 'updatedAt' in data else None,
+            updated_at=ciso8601.parse_datetime(data['updatedAt']) if 'updatedAt' in data else None,
         )
+
+
+class QueryOptions:
+    """Query options."""
+
+    def __init__(self, profilers: Optional[List[str]] = None, profiler_callback: Optional[Callable] = None) -> None:
+        """
+        Initialize query options.
+
+        :param profilers: list of enabled flux profilers
+        :param profiler_callback: callback function return profilers (FluxRecord)
+        """
+        self.profilers = profilers
+        self.profiler_callback = profiler_callback
