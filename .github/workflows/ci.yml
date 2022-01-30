@@ -1,0 +1,68 @@
+name: CI
+on: pull_request
+
+env:
+  PY_VER: 3.8
+  INFLUXDB_ADMIN_TOKEN: DUMMYTOKEN
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      influxdb:
+        image: influxdb:2.1-alpine
+        env:
+          DOCKER_INFLUXDB_INIT_USERNAME: test
+          DOCKER_INFLUXDB_INIT_PASSWORD: test_password1
+          DOCKER_INFLUXDB_INIT_ORG: test
+          DOCKER_INFLUXDB_INIT_BUCKET: test
+          DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${{ env.INFLUXDB_ADMIN_TOKEN }}
+          DOCKER_INFLUXDB_INIT_MODE: setup
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run MySQL
+        run: docker compose run --service-ports --detach --rm db
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PY_VER }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/poetry
+            ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - uses: abatilo/actions-poetry@v2.1.4
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.create false
+          poetry install --no-root
+      - name: Run test
+        run: pytest --cov=./src --cov-config=./pyproject.toml --cov-report=xml:./coverage.xml ./tests
+        env:
+          INFLUXDB_HOST: influxdb
+          INFLUXDB_ADMIN_TOKEN: ${{ env.INFLUXDB_ADMIN_TOKEN }}
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PY_VER }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/poetry
+            ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - uses: abatilo/actions-poetry@v2.1.4
+      - name: Install dependencies
+        run: |
+          poetry config virtualenvs.create false
+          poetry install --no-root
+      - name: Run black
+        run: black aioinfluxdb --check
