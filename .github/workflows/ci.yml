@@ -20,8 +20,6 @@ jobs:
           DOCKER_INFLUXDB_INIT_MODE: setup
     steps:
       - uses: actions/checkout@v2
-      - name: Run MySQL
-        run: docker compose run --service-ports --detach --rm db
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PY_VER }}
