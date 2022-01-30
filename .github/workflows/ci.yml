@@ -18,6 +18,8 @@ jobs:
           DOCKER_INFLUXDB_INIT_BUCKET: test
           DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${{ env.INFLUXDB_ADMIN_TOKEN }}
           DOCKER_INFLUXDB_INIT_MODE: setup
+        ports:
+          - "8086:8086"
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -39,7 +41,7 @@ jobs:
       - name: Run test
         run: pytest --cov=./src --cov-config=./pyproject.toml --cov-report=xml:./coverage.xml ./tests
         env:
-          INFLUXDB_HOST: influxdb
+          INFLUXDB_HOST: localhost
           INFLUXDB_ADMIN_TOKEN: ${{ env.INFLUXDB_ADMIN_TOKEN }}
 
   lint:
