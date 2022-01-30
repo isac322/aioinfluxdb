@@ -8,6 +8,7 @@ import ciso8601
 from typing_extensions import TypeAlias, TypedDict
 
 from aioinfluxdb import constants
+from aioinfluxdb.flux_table import FluxRecord
 
 TagType: TypeAlias = Tuple[str, str]
 TagSetType: TypeAlias = Iterable[Tuple[str, str]]
@@ -165,7 +166,14 @@ class Organization:
 class QueryOptions:
     """Query options."""
 
-    def __init__(self, profilers: Optional[List[str]] = None, profiler_callback: Optional[Callable] = None) -> None:
+    profilers: Optional[List[str]]
+    profiler_callback: Optional[Callable[[FluxRecord], Any]]
+
+    def __init__(
+        self,
+        profilers: Optional[List[str]] = None,
+        profiler_callback: Optional[Callable[[FluxRecord], Any]] = None,
+    ) -> None:
         """
         Initialize query options.
 

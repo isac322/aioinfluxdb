@@ -184,11 +184,11 @@ class Client(metaclass=ABCMeta):
         raise NotImplementedError
 
     @overload
-    async def flux_query(self, *, organization: str, flux_body: str) -> None:
+    async def flux_query(self, *, organization: str, flux_body: str) -> AsyncIterable[FluxRecord]:
         pass
 
     @overload
-    async def flux_query(self, *, organization_id: str, flux_body: str) -> None:
+    async def flux_query(self, *, organization_id: str, flux_body: str) -> AsyncIterable[FluxRecord]:
         pass
 
     @abstractmethod

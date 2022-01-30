@@ -4,6 +4,7 @@ import re
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
 from typing import Iterable, Optional, Pattern, SupportsFloat, SupportsInt, Union
+
 from typing_extensions import Final
 
 from aioinfluxdb import types
@@ -45,13 +46,13 @@ class DefaultRecordSerializer(RecordSerializer):
             and len(record) == 4
             and isinstance(record[0], str)
             and (isinstance(record[1], Iterable) or record[1] is None)
-            and isinstance(record[2], Iterable)
-            and (isinstance(record[3], (datetime, int, float)) or record[3] is None)
+            and isinstance(record[2], Iterable)  # type: ignore[misc]
+            and (isinstance(record[3], (datetime, int, float)) or record[3] is None)  # type: ignore[misc]
         ):
             measurement = cls._serialize_measurement(record[0])
-            tag_set = cls._serialize_tag_set(record[1])
-            field_set = cls._serialize_field_set(record[2])
-            timestamp = cls._serialize_timestamp(record[3])
+            tag_set = cls._serialize_tag_set(record[1])  # type: ignore[arg-type]
+            field_set = cls._serialize_field_set(record[2])  # type: ignore[misc]
+            timestamp = cls._serialize_timestamp(record[3])  # type: ignore[misc]
         else:
             raise ValueError(f'Unsupported record: {record.__class__}')
 
@@ -88,27 +89,27 @@ class DefaultRecordSerializer(RecordSerializer):
 
         if isinstance(timestamp, datetime):
             return str(int(timestamp.timestamp() * 1_000_000))
-        elif isinstance(timestamp, float):
-            return str(int(timestamp * 1_000_000))
         elif isinstance(timestamp, int):
             return str(timestamp)
+        elif isinstance(timestamp, float):
+            return str(int(timestamp * 1_000_000))
         else:
             raise ValueError(f'Unsupported timestamp type: {timestamp.__class__}')
 
     @classmethod
     def _serialize_field_value(cls, value: types.FieldType) -> str:
-        if isinstance(value, float):
-            return cls._serialize_float_field_value(value)
-        elif isinstance(value, bool):
+        if isinstance(value, bool):
             return cls._serialize_bool_field_value(value)
         elif isinstance(value, int):
             return cls._serialize_int_field_value(value)
+        elif isinstance(value, float):
+            return cls._serialize_float_field_value(value)
         elif isinstance(value, str):
             return cls._serialize_string_field_value(value)
+        elif isinstance(value, SupportsInt):  # type: ignore[unreachable]
+            return cls._serialize_int_field_value(int(value))
         elif isinstance(value, SupportsFloat):
             return cls._serialize_float_field_value(float(value))
-        elif isinstance(value, SupportsInt):
-            return cls._serialize_int_field_value(int(value))
         else:
             return cls._serialize_string_field_value(str(value))
 

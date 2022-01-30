@@ -5,7 +5,8 @@ Based on https://github.com/influxdata/influxdb-client-python 1.25.0
 from __future__ import annotations
 
 import base64
-from typing import AsyncGenerator, List, Optional
+from datetime import datetime
+from typing import Any, AsyncGenerator, Callable, Dict, List, Optional, Sequence, Union
 
 import aiocsv
 import ciso8601
@@ -25,11 +26,19 @@ ANNOTATIONS = [ANNOTATION_DEFAULT, ANNOTATION_GROUP, ANNOTATION_DATATYPE]
 class FluxCsvParser(object):
     """Parse to processing response from InfluxDB to FluxStructures or DataFrame."""
 
+    _reader: aiocsv.AsyncReader
+    tables: List[FluxTable]
+    _serialization_mode: FluxSerializationMode
+    _data_frame_index: Union[List[str], str, None]
+    _data_frame_values: List[Dict[str, Any]]
+    _profilers: Optional[List[str]]
+    _profiler_callback: Optional[Callable[[FluxRecord], Any]]
+
     def __init__(
         self,
         body_reader: WithAsyncRead,
         serialization_mode: FluxSerializationMode,
-        data_frame_index: List[str] = None,
+        data_frame_index: Union[List[str], str, None] = None,
         query_options: Optional[types.QueryOptions] = None,
     ) -> None:
         """Initialize defaults."""
@@ -46,12 +55,12 @@ class FluxCsvParser(object):
         """Return Python generator."""
         return self._parse_flux_response()
 
-    async def _parse_flux_response(self) -> AsyncGenerator[FluxRecord, None]:
+    async def _parse_flux_response(self) -> AsyncGenerator[Union[FluxRecord, 'pandas.DataFrame'], None]:
         table_index = 0
         table_id = -1
         start_new_table = False
-        table = None
-        groups = []
+        table: Optional[FluxTable] = None
+        groups: List[str] = []
         parsing_state_error = False
 
         async for csv in self._reader:
@@ -79,7 +88,7 @@ class FluxCsvParser(object):
                 # Return already parsed DataFrame
                 if (self._serialization_mode is FluxSerializationMode.dataFrame) & hasattr(self, '_data_frame'):
                     df = self._prepare_data_frame()
-                    if not self._is_profiler_table(table):
+                    if not self._is_profiler_table(table):  # type: ignore[arg-type]
                         yield df
 
                 start_new_table = True
@@ -148,10 +157,10 @@ class FluxCsvParser(object):
         # Return latest DataFrame
         if (self._serialization_mode is FluxSerializationMode.dataFrame) & hasattr(self, '_data_frame'):
             df = self._prepare_data_frame()
-            if not self._is_profiler_table(table):
+            if not self._is_profiler_table(table):  # type: ignore[arg-type]
                 yield df
 
-    def _prepare_data_frame(self):
+    def _prepare_data_frame(self) -> 'pandas.DataFrame':
         import pandas
 
         # We have to create temporary DataFrame because we want to preserve default column values
@@ -166,18 +175,18 @@ class FluxCsvParser(object):
         # Append data
         return self._data_frame.astype(_temp_df.dtypes).append(_temp_df)
 
-    def parse_record(self, table_index, table, csv):
+    def parse_record(self, table_index: int, table: FluxTable, csv: List[str]) -> FluxRecord:
         """Parse one record."""
         record = FluxRecord(table_index)
 
         for fluxColumn in table.columns:
             column_name = fluxColumn.label
-            str_val = csv[fluxColumn.index + 1]
-            record.values[column_name] = self._to_value(str_val, fluxColumn)
+            str_val = csv[fluxColumn.index + 1]  # type: ignore[operator]
+            record.values[column_name] = self._to_value(str_val, fluxColumn)  # type: ignore[index]
 
         return record
 
-    def _to_value(self, str_val, column):
+    def _to_value(self, str_val: str, column: FluxColumn) -> Union[str, bool, int, float, bytes, datetime, None]:
 
         if str_val == '' or str_val is None:
             default_value = column.default_value
@@ -208,14 +217,14 @@ class FluxCsvParser(object):
             return int(str_val)
 
     @staticmethod
-    def add_data_types(table, data_types):
+    def add_data_types(table: FluxTable, data_types: Sequence[str]) -> None:
         """Add data types to columns."""
         for index in range(1, len(data_types)):
             column_def = FluxColumn(index=index - 1, data_type=data_types[index])
             table.columns.append(column_def)
 
     @staticmethod
-    def add_groups(table, csv):
+    def add_groups(table: FluxTable, csv: List[str]) -> None:
         """Add group keys to columns."""
         i = 1
         for column in table.columns:
@@ -223,7 +232,7 @@ class FluxCsvParser(object):
             i += 1
 
     @staticmethod
-    def add_default_empty_values(table, default_values):
+    def add_default_empty_values(table: FluxTable, default_values: List[str]) -> None:
         """Add default values to columns."""
         i = 1
         for column in table.columns:
@@ -231,14 +240,14 @@ class FluxCsvParser(object):
             i += 1
 
     @staticmethod
-    def add_column_names_and_tags(table, csv):
+    def add_column_names_and_tags(table: FluxTable, csv: List[str]) -> None:
         """Add labels to columns."""
         i = 1
         for column in table.columns:
             column.label = csv[i]
             i += 1
 
-    def _insert_table(self, table, table_index):
+    def _insert_table(self, table: FluxTable, table_index: int) -> None:
         if self._serialization_mode is FluxSerializationMode.tables:
             self.tables.insert(table_index, table)
 
@@ -257,9 +266,7 @@ class FluxCsvParser(object):
         if not self._profilers:
             return False
 
-        return any(
-            filter(lambda column: (column.default_value == "_profiler" and column.label == "result"), table.columns)
-        )
+        return any(c.default_value == "_profiler" and c.label == "result" for c in table.columns)
 
     def table_list(self) -> List[FluxTable]:
         """Get the list of flux tables."""
@@ -268,7 +275,7 @@ class FluxCsvParser(object):
         else:
             return list(filter(lambda table: not self._is_profiler_table(table), self.tables))
 
-    def _print_profiler_info(self, flux_record: FluxRecord):
+    def _print_profiler_info(self, flux_record: FluxRecord) -> None:
         if flux_record.get_measurement().startswith("profiler/"):
             if self._profiler_callback:
                 self._profiler_callback(flux_record)

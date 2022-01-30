@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import http
 from datetime import datetime
-from typing import Any, AsyncIterable, Iterable, List, Mapping, Optional, Union
+from typing import Any, AsyncIterable, Dict, Iterable, List, Mapping, Optional, Union
 
 import aiohttp
 import orjson
@@ -175,7 +175,7 @@ class AioHTTPClient(Client):
         rp: Optional[str] = None,
         schema_type: Optional[str] = None,
     ) -> types.Bucket:
-        data = dict(
+        data: Dict[str, Any] = dict(
             name=name,
             orgID=organization_id,
         )
@@ -232,11 +232,11 @@ class AioHTTPClient(Client):
         precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
         record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
     ) -> None:
-        data = serializer.DefaultRecordSerializer.serialize_record(record)
+        data = serializer.DefaultRecordSerializer.serialize_record(record)  # type: ignore[arg-type]
         headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
 
         if self._gzip:
-            data = gzip.compress(data.encode())
+            data = gzip.compress(data.encode())  # type: ignore[no-untyped-call]
             headers[aiohttp.hdrs.CONTENT_ENCODING] = 'gzip'
             headers[aiohttp.hdrs.ACCEPT_ENCODING] = 'gzip'
 
@@ -246,7 +246,7 @@ class AioHTTPClient(Client):
                 bucket=bucket,
                 organization=organization,
                 organization_id=organization_id,
-                precision=precision.value,
+                precision=precision,
             ),
             headers=headers,
             data=data,
@@ -267,11 +267,11 @@ class AioHTTPClient(Client):
             Iterable[types.RecordTuple],
         ],
     ) -> None:
-        data = '\n'.join(map(serializer.DefaultRecordSerializer.serialize_record, records))
+        data = '\n'.join(map(serializer.DefaultRecordSerializer.serialize_record, records))  # type: ignore[arg-type]
         headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
 
         if self._gzip:
-            data = gzip.compress(data.encode())
+            data = gzip.compress(data.encode())  # type: ignore[no-untyped-call]
             headers[aiohttp.hdrs.CONTENT_ENCODING] = 'gzip'
             headers[aiohttp.hdrs.ACCEPT_ENCODING] = 'gzip'
 
@@ -281,7 +281,7 @@ class AioHTTPClient(Client):
                 bucket=bucket,
                 organization=organization,
                 organization_id=organization_id,
-                precision=precision.value,
+                precision=precision,
             ),
             headers=headers,
             data=data,
@@ -307,7 +307,7 @@ class AioHTTPClient(Client):
             # flux query does not support gzip body
             headers[aiohttp.hdrs.ACCEPT_ENCODING] = 'gzip'
 
-        body = dict(
+        body: Dict[str, Any] = dict(
             dialect=dict(
                 annotations=('group', 'datatype', 'default'),
                 dateTimeFormat='RFC3339Nano',
