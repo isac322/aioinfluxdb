@@ -30,14 +30,21 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
+            ~/.cache/pip
+          key: ${{ matrix.python_version }}-poetry-${{ steps.setup-poetry.inputs.poetry-version }}
+          restore-keys: |
+            ${{ matrix.python_version }}-poetry-${{ steps.setup-poetry.inputs.poetry-version }}
+      - uses: actions/cache@v2
+        with:
+          path: |
             ~/.cache/pypoetry/artifacts
             ~/.cache/pypoetry/cache/repositories
-            ~/.cache/pip
             poetry.lock
           key: ${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             ${{ matrix.python_version }}-pip-
       - uses: abatilo/actions-poetry@v2.1.4
+        name: setup-poetry
       - name: Install dependencies
         run: |
           poetry install --no-root --remove-untracked
