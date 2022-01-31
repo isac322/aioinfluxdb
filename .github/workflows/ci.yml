@@ -36,16 +36,6 @@ jobs:
             ~/.cache/pip
             poetry.lock
           key: ${{ runner.os }}-${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.python_version }}-pip-
-      - name: test cache
-        run: |
-          ls -ahl .
-#          ls -ahl ~/.cache
-#          ls -ahl ~/.cache/pip
-#          ls -ahl ~/.cache/pypoetry/cache
-#          ls -ahl ~/.cache/pypoetry/artifacts
-#          du -had 1 ~/.cache
       - uses: abatilo/actions-poetry@v2.1.4
       - name: Install dependencies
         run: |
@@ -60,6 +50,7 @@ jobs:
       - uses: codecov/codecov-action@v2
         with:
           fail_ci_if_error: true
+          flags: ${{ matrix.python_version }}
 
   lint:
     runs-on: ubuntu-latest
@@ -71,15 +62,14 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            ~/.cache/poetry
+            ~/.cache/pypoetry/artifacts
+            ~/.cache/pypoetry/cache
             ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+            poetry.lock
+          key: ${{ runner.os }}-${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
       - uses: abatilo/actions-poetry@v2.1.4
       - name: Install dependencies
         run: |
-          poetry config virtualenvs.create false
-          poetry install --no-root
+          poetry install --no-root --remove-untracked
       - name: Run black
         run: black aioinfluxdb --check
