@@ -76,4 +76,5 @@ jobs:
         run: |
           poetry install --no-root --remove-untracked
       - name: Run black
-        run: black aioinfluxdb --check
+        run: |
+          poetry run black aioinfluxdb --check
