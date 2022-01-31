@@ -47,6 +47,7 @@ jobs:
         name: setup-poetry
       - run: |
           ls -ahl `which poetry`
+          env
       - name: Install dependencies
         run: |
           poetry install --no-root --remove-untracked
