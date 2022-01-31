@@ -347,7 +347,7 @@ class AioHTTPClient(Client):
     ) -> Mapping[str, str]:
         ret = dict(
             bucket=bucket,
-            precision=precision,
+            precision=precision.value,
         )
         if organization_id is not _Sentinel.MISSING:
             ret['orgID'] = organization_id
