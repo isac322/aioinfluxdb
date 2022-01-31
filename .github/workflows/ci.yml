@@ -2,7 +2,6 @@ name: CI
 on: pull_request
 
 env:
-  PY_VER: 3.8
   INFLUXDB_ADMIN_TOKEN: DUMMYTOKEN
 
 jobs:
@@ -18,51 +17,61 @@ jobs:
           DOCKER_INFLUXDB_INIT_BUCKET: test
           DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${{ env.INFLUXDB_ADMIN_TOKEN }}
           DOCKER_INFLUXDB_INIT_MODE: setup
+        ports:
+          - "8086:8086"
+    strategy:
+      matrix:
+        python_version: [ "3.7", "3.8", "3.9", "3.10" ]
     steps:
       - uses: actions/checkout@v2
-      - name: Run MySQL
-        run: docker compose run --service-ports --detach --rm db
       - uses: actions/setup-python@v2
         with:
-          python-version: ${{ env.PY_VER }}
+          python-version: ${{ matrix.python_version }}
       - uses: actions/cache@v2
         with:
           path: |
-            ~/.cache/poetry
+            ~/.cache/pypoetry/artifacts
+            ~/.cache/pypoetry/cache/repositories
             ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+            poetry.lock
+          key: ${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ matrix.python_version }}-pip-
       - uses: abatilo/actions-poetry@v2.1.4
       - name: Install dependencies
         run: |
-          poetry config virtualenvs.create false
-          poetry install --no-root
+          poetry install --no-root --remove-untracked
       - name: Run test
-        run: pytest --cov=./src --cov-config=./pyproject.toml --cov-report=xml:./coverage.xml ./tests
+        run: |
+          ./wait-for-it.sh localhost:8086
+          poetry run pytest --cov aioinfluxdb --cov-config pyproject.toml --cov-report 'xml:./coverage.xml' ./tests
         env:
-          INFLUXDB_HOST: influxdb
+          INFLUXDB_HOST: localhost
           INFLUXDB_ADMIN_TOKEN: ${{ env.INFLUXDB_ADMIN_TOKEN }}
+      - uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          flags: ${{ matrix.python_version }}
 
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env.PY_VER }}
       - uses: actions/cache@v2
         with:
           path: |
-            ~/.cache/poetry
+            ~/.cache/pypoetry/artifacts
+            ~/.cache/pypoetry/cache/repositories
             ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+            poetry.lock
+          key: ${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ matrix.python_version }}-pip-
       - uses: abatilo/actions-poetry@v2.1.4
       - name: Install dependencies
         run: |
-          poetry config virtualenvs.create false
-          poetry install --no-root
+          poetry install --no-root --remove-untracked
       - name: Run black
-        run: black aioinfluxdb --check
+        run: |
+          poetry run black aioinfluxdb --check
