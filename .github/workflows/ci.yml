@@ -41,11 +41,11 @@ jobs:
       - name: test cache
         run: |
           ls -ahl .
-          ls -ahl ~/.cache
-          ls -ahl ~/.cache/pip
-          ls -ahl ~/.cache/pypoetry/cache
-          ls -ahl ~/.cache/pypoetry/artifacts
-          du -had 1 ~/.cache
+#          ls -ahl ~/.cache
+#          ls -ahl ~/.cache/pip
+#          ls -ahl ~/.cache/pypoetry/cache
+#          ls -ahl ~/.cache/pypoetry/artifacts
+#          du -had 1 ~/.cache
       - uses: abatilo/actions-poetry@v2.1.4
       - name: Install dependencies
         run: |
