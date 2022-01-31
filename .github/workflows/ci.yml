@@ -25,28 +25,24 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
-        name: setup-python
         with:
           python-version: ${{ matrix.python_version }}
       - uses: actions/cache@v2
         with:
           path: |
             ~/.cache/pip
-          key: ${{ steps.setup-python.outputs.python-version }}-pip-${{ steps.setup-poetry.inputs.poetry-version }}
+          key: ${{ matrix.python_version }}-poetry-${{ steps.setup-poetry.inputs.poetry-version }}
           restore-keys: |
-            ${{ steps.setup-python.outputs.python-version }}-pip-${{ steps.setup-poetry.inputs.poetry-version }}
+            ${{ matrix.python_version }}-poetry-${{ steps.setup-poetry.inputs.poetry-version }}
       - uses: actions/cache@v2
         with:
           path: |
             ~/.cache/pypoetry/artifacts
             ~/.cache/pypoetry/cache/repositories
             poetry.lock
-          key: ${{ steps.setup-python.outputs.python-version }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
-            ${{ steps.setup-python.outputs.python-version }}-poetry-
-      - run: |
-          echo '${{ steps.setup-python.outputs.python-version }}'
-          echo '${{ steps.setup-poetry.inputs.poetry-version }}'
+            ${{ matrix.python_version }}-pip-
       - uses: abatilo/actions-poetry@v2.1.4
         name: setup-poetry
       - run: |
@@ -75,19 +71,13 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: |
-            ~/.cache/pip
-          key: ${{ matrix.python_version }}-pip-${{ steps.setup-poetry.inputs.poetry-version }}
-          restore-keys: |
-            ${{ matrix.python_version }}-pip-${{ steps.setup-poetry.inputs.poetry-version }}
-      - uses: actions/cache@v2
-        with:
-          path: |
             ~/.cache/pypoetry/artifacts
             ~/.cache/pypoetry/cache/repositories
+            ~/.cache/pip
             poetry.lock
-          key: ${{ matrix.python_version }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
-            ${{ matrix.python_version }}-poetry-
+            ${{ matrix.python_version }}-pip-
       - uses: abatilo/actions-poetry@v2.1.4
       - name: Install dependencies
         run: |
