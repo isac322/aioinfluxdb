@@ -37,6 +37,11 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python_version }}-pip-
+      - name: test cache
+        run: |
+          ls -ahl .
+          ls -ahl ~/.cache
+          ls -ahl ~/.cache/pip
       - uses: abatilo/actions-poetry@v2.1.4
       - name: Install dependencies
         run: |
