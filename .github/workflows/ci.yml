@@ -34,8 +34,6 @@ jobs:
           key: ${{ matrix.python_version }}-poetry-${{ steps.setup-poetry.inputs.poetry-version }}
           restore-keys: |
             ${{ matrix.python_version }}-poetry-${{ steps.setup-poetry.inputs.poetry-version }}
-      - run: |
-          ls -ahl `which poetry`
       - uses: actions/cache@v2
         with:
           path: |
@@ -47,6 +45,8 @@ jobs:
             ${{ matrix.python_version }}-pip-
       - uses: abatilo/actions-poetry@v2.1.4
         name: setup-poetry
+      - run: |
+          ls -ahl `which poetry`
       - name: Install dependencies
         run: |
           poetry install --no-root --remove-untracked
