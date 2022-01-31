@@ -32,10 +32,12 @@ jobs:
         with:
           path: |
             ~/.cache/pypoetry/artifacts
-            ~/.cache/pypoetry/cache
+            ~/.cache/pypoetry/cache/repositories
             ~/.cache/pip
             poetry.lock
-          key: ${{ runner.os }}-${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ matrix.python_version }}-pip-
       - uses: abatilo/actions-poetry@v2.1.4
       - name: Install dependencies
         run: |
@@ -63,10 +65,12 @@ jobs:
         with:
           path: |
             ~/.cache/pypoetry/artifacts
-            ~/.cache/pypoetry/cache
+            ~/.cache/pypoetry/cache/repositories
             ~/.cache/pip
             poetry.lock
-          key: ${{ runner.os }}-${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ matrix.python_version }}-pip-
       - uses: abatilo/actions-poetry@v2.1.4
       - name: Install dependencies
         run: |
