@@ -34,8 +34,6 @@ jobs:
           key: ${{ matrix.python_version }}-poetry-${{ steps.setup-poetry.inputs.poetry-version }}
           restore-keys: |
             ${{ matrix.python_version }}-poetry-${{ steps.setup-poetry.inputs.poetry-version }}
-      - run: |
-          ls -ahl `which poetry`
       - uses: actions/cache@v2
         with:
           path: |
