@@ -30,6 +30,7 @@ jobs:
           path: |
             ~/.cache/poetry
             ~/.cache/pip
+            poetry.lock
           key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-pip-
@@ -39,7 +40,9 @@ jobs:
           poetry config virtualenvs.create false
           poetry install --no-root
       - name: Run test
-        run: ./wait-for-it.sh localhost:8086 -- pytest --cov=./src --cov-config=./pyproject.toml --cov-report=xml:./coverage.xml ./tests
+        run: |
+          ./wait-for-it.sh localhost:8086
+          pytest --cov=./src --cov-config=./pyproject.toml --cov-report=xml:./coverage.xml ./tests
         env:
           INFLUXDB_HOST: localhost
           INFLUXDB_ADMIN_TOKEN: ${{ env.INFLUXDB_ADMIN_TOKEN }}
