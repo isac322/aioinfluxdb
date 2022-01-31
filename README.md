@@ -1,6 +1,6 @@
 # aioinfluxdb
 
-![PyPI](https://img.shields.io/pypi/v/aioinfluxdb?link=https://pypi.org/project/aioinfluxdb/&style=flat-square) ![Codecov](https://img.shields.io/codecov/c/gh/isac322/aioinfluxdb?style=flat-square) ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/isac322/aioinfluxdb/CI?style=flat-square) ![GitHub](https://img.shields.io/github/license/isac322/aioinfluxdb?style=flat-square)
+[![PyPI](https://img.shields.io/pypi/v/aioinfluxdb?style=flat-square)](https://pypi.org/project/aioinfluxdb/) ![Codecov](https://img.shields.io/codecov/c/gh/isac322/aioinfluxdb?style=flat-square) ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/isac322/aioinfluxdb/CI?style=flat-square) ![GitHub](https://img.shields.io/github/license/isac322/aioinfluxdb?style=flat-square)
 
 The Python client for InfluxDB v2 supports asyncio.
 
