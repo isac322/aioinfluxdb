@@ -20,25 +20,28 @@ jobs:
           DOCKER_INFLUXDB_INIT_MODE: setup
         ports:
           - "8086:8086"
+    strategy:
+      matrix:
+        python_version: [ "3.7", "3.8", "3.9", "3.10" ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: ${{ env.PY_VER }}
+          python-version: ${{ matrix.python_version }}
       - uses: actions/cache@v2
         with:
           path: |
             ~/.cache/poetry
             ~/.cache/pip
             poetry.lock
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-${{ matrix.python_version }}-pip-
       - uses: abatilo/actions-poetry@v2.1.4
       - name: Install dependencies
         run: |
           poetry config virtualenvs.create false
-          poetry install --no-root
+          poetry install --no-root --remove-untracked
       - name: Run test
         run: |
           ./wait-for-it.sh localhost:8086
@@ -46,6 +49,9 @@ jobs:
         env:
           INFLUXDB_HOST: localhost
           INFLUXDB_ADMIN_TOKEN: ${{ env.INFLUXDB_ADMIN_TOKEN }}
+      - uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
 
   lint:
     runs-on: ubuntu-latest
