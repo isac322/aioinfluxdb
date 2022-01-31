@@ -55,7 +55,7 @@ jobs:
       - uses: codecov/codecov-action@v2
         with:
           fail_ci_if_error: true
-          flags: ${{ matrix.python_version }}
+          flags: "${{ matrix.python_version }}"
 
   lint:
     runs-on: ubuntu-latest
