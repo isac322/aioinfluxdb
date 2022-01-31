@@ -2,7 +2,6 @@ name: CI
 on: pull_request
 
 env:
-  PY_VER: 3.8
   INFLUXDB_ADMIN_TOKEN: DUMMYTOKEN
 
 jobs:
@@ -22,7 +21,7 @@ jobs:
           - "8086:8086"
     strategy:
       matrix:
-        python_version: [ "3.7" ]
+        python_version: [ "3.7", "3.8", "3.9", "3.10" ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
