@@ -44,7 +44,7 @@ jobs:
       - name: Run test
         run: |
           ./wait-for-it.sh localhost:8086
-          pytest --cov=./src --cov-config=./pyproject.toml --cov-report=xml:./coverage.xml ./tests
+          poetry run pytest --cov aioinfluxdb --cov-config pyproject.toml --cov-report 'xml:./coverage.xml' ./tests
         env:
           INFLUXDB_HOST: localhost
           INFLUXDB_ADMIN_TOKEN: ${{ env.INFLUXDB_ADMIN_TOKEN }}
