@@ -27,20 +27,17 @@ class AioHTTPClient(Client):
         port: int = 8086,
         tls: bool = False,
         connector: Optional[aiohttp.BaseConnector] = None,
-        session: Optional[aiohttp.ClientSession] = None,
         gzip: bool = True,
     ) -> None:
         super().__init__(token=token, gzip=gzip)
 
         self._host = host
         self._port = port
-
-        if connector is not None and session is not None:
-            raise ValueError('`connector` and `session` cannot be set at the same time')
-        elif session is not None:
-            self._session = session
-        else:
-            self._session = aiohttp.ClientSession(f'{"https" if tls else "http"}://{host}:{port}', connector=connector)
+        self._session = aiohttp.ClientSession(
+            f'{"https" if tls else "http"}://{host}:{port}',
+            connector=connector,
+            connector_owner=connector is None,
+        )
 
     async def ping(self) -> bool:
         res = await self._session.get('/ping')
