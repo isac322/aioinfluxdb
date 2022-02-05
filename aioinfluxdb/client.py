@@ -3,17 +3,12 @@ from __future__ import annotations
 import asyncio
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
-from enum import Enum
-from typing import Any, AsyncIterable, Iterable, Mapping, Optional, Union, overload
+from typing import Any, AsyncIterable, Dict, Iterable, Mapping, Optional, Union, overload
 
 from typing_extensions import final
 
 from aioinfluxdb import constants, types
 from aioinfluxdb.flux_table import FluxRecord
-
-
-class _Sentinel(Enum):
-    MISSING = object()
 
 
 class Client(metaclass=ABCMeta):
@@ -127,10 +122,9 @@ class Client(metaclass=ABCMeta):
         self,
         *,
         bucket: str,
-        organization: Union[str, _Sentinel] = _Sentinel.MISSING,
-        organization_id: Union[str, _Sentinel] = _Sentinel.MISSING,
         precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
         record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
+        **kwargs: str,
     ) -> None:
         raise NotImplementedError
 
@@ -171,8 +165,6 @@ class Client(metaclass=ABCMeta):
         self,
         *,
         bucket: str,
-        organization: Union[str, _Sentinel] = _Sentinel.MISSING,
-        organization_id: Union[str, _Sentinel] = _Sentinel.MISSING,
         precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
         records: Union[
             Iterable[str],
@@ -180,26 +172,40 @@ class Client(metaclass=ABCMeta):
             Iterable[types.MinimalRecordTuple],
             Iterable[types.RecordTuple],
         ],
+        **kwargs: str,
     ) -> None:
         raise NotImplementedError
 
     @overload
-    async def flux_query(self, *, organization: str, flux_body: str) -> AsyncIterable[FluxRecord]:
+    async def flux_query(
+        self,
+        *,
+        organization: str,
+        flux_body: str,
+        now: Optional[datetime] = None,
+        params: Optional[Mapping[str, Any]] = None,
+    ) -> AsyncIterable[FluxRecord]:
         pass
 
     @overload
-    async def flux_query(self, *, organization_id: str, flux_body: str) -> AsyncIterable[FluxRecord]:
+    async def flux_query(
+        self,
+        *,
+        organization_id: str,
+        flux_body: str,
+        now: Optional[datetime] = None,
+        params: Optional[Mapping[str, Any]] = None,
+    ) -> AsyncIterable[FluxRecord]:
         pass
 
     @abstractmethod
     async def flux_query(
         self,
         *,
-        organization: Union[str, _Sentinel] = _Sentinel.MISSING,
-        organization_id: Union[str, _Sentinel] = _Sentinel.MISSING,
         flux_body: str,
         now: Optional[datetime] = None,
         params: Optional[Mapping[str, Any]] = None,
+        **kwargs: str,
     ) -> AsyncIterable[FluxRecord]:
         raise NotImplementedError
 
@@ -215,3 +221,11 @@ class Client(metaclass=ABCMeta):
     @property
     def api_token(self) -> str:
         return self._token
+
+    @classmethod
+    def _build_org_query_param(cls, org_map: Mapping[str, str]) -> Dict[str, str]:
+        if 'organization_id' in org_map:
+            query_params = dict(orgID=org_map['organization_id'])
+        else:
+            query_params = dict(org=org_map['organization'])
+        return query_params
