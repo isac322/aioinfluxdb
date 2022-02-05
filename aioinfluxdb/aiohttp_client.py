@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import http
 from datetime import datetime
-from typing import Any, AsyncIterable, Dict, Iterable, List, Mapping, Optional, Union
+from typing import Any, AsyncIterable, Dict, Iterable, List, Mapping, Optional, Union, overload
 
 import aiohttp
 import orjson
@@ -10,7 +10,7 @@ from aiocsv.protocols import WithAsyncRead
 from isal import igzip as gzip
 
 from aioinfluxdb import constants, serializer, types
-from aioinfluxdb.client import Client, _Sentinel
+from aioinfluxdb.client import Client
 from aioinfluxdb.csv_parser import FluxCsvParser
 from aioinfluxdb.flux_table import FluxRecord
 
@@ -223,14 +223,35 @@ class AioHTTPClient(Client):
         res.raise_for_status()
         return types.Bucket.from_json(await res.json(loads=orjson.loads))
 
+    @overload
     async def write(
         self,
         *,
         bucket: str,
-        organization: Union[str, _Sentinel] = _Sentinel.MISSING,
-        organization_id: Union[str, _Sentinel] = _Sentinel.MISSING,
+        organization: str,
         precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
         record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
+    ) -> None:
+        pass
+
+    @overload
+    async def write(
+        self,
+        *,
+        bucket: str,
+        organization_id: str,
+        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
+        record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
+    ) -> None:
+        pass
+
+    async def write(
+        self,
+        *,
+        bucket: str,
+        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
+        record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
+        **kwargs: str,
     ) -> None:
         data = serializer.DefaultRecordSerializer.serialize_record(record)  # type: ignore[arg-type]
         headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
@@ -244,21 +265,20 @@ class AioHTTPClient(Client):
             '/api/v2/write',
             params=self._build_query_params(
                 bucket=bucket,
-                organization=organization,
-                organization_id=organization_id,
                 precision=precision,
+                org_map=kwargs,
             ),
             headers=headers,
             data=data,
         )
         res.raise_for_status()
 
+    @overload
     async def write_multiple(
         self,
         *,
         bucket: str,
-        organization: Union[str, _Sentinel] = _Sentinel.MISSING,
-        organization_id: Union[str, _Sentinel] = _Sentinel.MISSING,
+        organization: str,
         precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
         records: Union[
             Iterable[str],
@@ -266,6 +286,37 @@ class AioHTTPClient(Client):
             Iterable[types.MinimalRecordTuple],
             Iterable[types.RecordTuple],
         ],
+    ) -> None:
+        pass
+
+    @overload
+    async def write_multiple(
+        self,
+        *,
+        bucket: str,
+        organization_id: str,
+        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
+        records: Union[
+            Iterable[str],
+            Iterable[types.Record],
+            Iterable[types.MinimalRecordTuple],
+            Iterable[types.RecordTuple],
+        ],
+    ) -> None:
+        pass
+
+    async def write_multiple(
+        self,
+        *,
+        bucket: str,
+        precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
+        records: Union[
+            Iterable[str],
+            Iterable[types.Record],
+            Iterable[types.MinimalRecordTuple],
+            Iterable[types.RecordTuple],
+        ],
+        **kwargs: str,
     ) -> None:
         data = '\n'.join(map(serializer.DefaultRecordSerializer.serialize_record, records))  # type: ignore[arg-type]
         headers = {aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}'}
@@ -279,23 +330,43 @@ class AioHTTPClient(Client):
             '/api/v2/write',
             params=self._build_query_params(
                 bucket=bucket,
-                organization=organization,
-                organization_id=organization_id,
                 precision=precision,
+                org_map=kwargs,
             ),
             headers=headers,
             data=data,
         )
         res.raise_for_status()
 
+    @overload
     async def flux_query(
         self,
         *,
-        organization: Union[str, _Sentinel] = _Sentinel.MISSING,
-        organization_id: Union[str, _Sentinel] = _Sentinel.MISSING,
+        organization: str,
         flux_body: str,
         now: Optional[datetime] = None,
         params: Optional[Mapping[str, Any]] = None,
+    ) -> AsyncIterable[FluxRecord]:
+        pass
+
+    @overload
+    async def flux_query(
+        self,
+        *,
+        organization_id: str,
+        flux_body: str,
+        now: Optional[datetime] = None,
+        params: Optional[Mapping[str, Any]] = None,
+    ) -> AsyncIterable[FluxRecord]:
+        pass
+
+    async def flux_query(
+        self,
+        *,
+        flux_body: str,
+        now: Optional[datetime] = None,
+        params: Optional[Mapping[str, Any]] = None,
+        **kwargs: str,
     ) -> AsyncIterable[FluxRecord]:
         headers = {
             aiohttp.hdrs.AUTHORIZATION: f'Token {self.api_token}',
@@ -324,7 +395,7 @@ class AioHTTPClient(Client):
 
         res = await self._session.post(
             '/api/v2/query',
-            params=dict(orgID=organization_id) if organization_id is not _Sentinel.MISSING else dict(org=organization),
+            params=self._build_org_query_param(kwargs),
             headers=headers,
             data=ser_body,
         )
@@ -341,18 +412,12 @@ class AioHTTPClient(Client):
         cls,
         *,
         bucket: str,
-        organization: Union[str, _Sentinel],
-        organization_id: Union[str, _Sentinel],
         precision: constants.WritePrecision,
+        org_map: Mapping[str, str],
     ) -> Mapping[str, str]:
-        ret = dict(
-            bucket=bucket,
-            precision=precision.value,
-        )
-        if organization_id is not _Sentinel.MISSING:
-            ret['orgID'] = organization_id
-        if organization is not _Sentinel.MISSING:
-            ret['org'] = organization
+        ret = cls._build_org_query_param(org_map)
+        ret['bucket'] = bucket
+        ret['precision'] = precision.value
         return ret
 
     async def _close(self) -> None:
