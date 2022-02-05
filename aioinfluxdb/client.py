@@ -104,7 +104,7 @@ class Client(metaclass=ABCMeta):
         precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
         record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     @overload
     async def write(
@@ -115,7 +115,7 @@ class Client(metaclass=ABCMeta):
         precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
         record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     async def write(
@@ -142,7 +142,7 @@ class Client(metaclass=ABCMeta):
             Iterable[types.RecordTuple],
         ],
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     @overload
     async def write_multiple(
@@ -158,7 +158,7 @@ class Client(metaclass=ABCMeta):
             Iterable[types.RecordTuple],
         ],
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     async def write_multiple(
@@ -185,7 +185,7 @@ class Client(metaclass=ABCMeta):
         now: Optional[datetime] = None,
         params: Optional[Mapping[str, Any]] = None,
     ) -> AsyncIterable[FluxRecord]:
-        pass
+        pass  # pragma: no cover
 
     @overload
     async def flux_query(
@@ -196,7 +196,7 @@ class Client(metaclass=ABCMeta):
         now: Optional[datetime] = None,
         params: Optional[Mapping[str, Any]] = None,
     ) -> AsyncIterable[FluxRecord]:
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     async def flux_query(
