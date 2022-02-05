@@ -232,7 +232,7 @@ class AioHTTPClient(Client):
         precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
         record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     @overload
     async def write(
@@ -243,7 +243,7 @@ class AioHTTPClient(Client):
         precision: constants.WritePrecision = constants.WritePrecision.NanoSecond,
         record: Union[str, types.Record, types.MinimalRecordTuple, types.RecordTuple],
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     async def write(
         self,
@@ -287,7 +287,7 @@ class AioHTTPClient(Client):
             Iterable[types.RecordTuple],
         ],
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     @overload
     async def write_multiple(
@@ -303,7 +303,7 @@ class AioHTTPClient(Client):
             Iterable[types.RecordTuple],
         ],
     ) -> None:
-        pass
+        pass  # pragma: no cover
 
     async def write_multiple(
         self,
@@ -347,7 +347,7 @@ class AioHTTPClient(Client):
         now: Optional[datetime] = None,
         params: Optional[Mapping[str, Any]] = None,
     ) -> AsyncIterable[FluxRecord]:
-        pass
+        pass  # pragma: no cover
 
     @overload
     async def flux_query(
@@ -358,7 +358,7 @@ class AioHTTPClient(Client):
         now: Optional[datetime] = None,
         params: Optional[Mapping[str, Any]] = None,
     ) -> AsyncIterable[FluxRecord]:
-        pass
+        pass  # pragma: no cover
 
     async def flux_query(
         self,
