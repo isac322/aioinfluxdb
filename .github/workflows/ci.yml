@@ -37,8 +37,7 @@ jobs:
             ~/.cache/pypoetry/artifacts
             ~/.cache/pypoetry/cache/repositories
             ~/.cache/pip
-            poetry.lock
-          key: ${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ matrix.python_version }}-pip-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
             ${{ matrix.python_version }}-pip-
       - uses: abatilo/actions-poetry@v2.1.4
@@ -68,8 +67,7 @@ jobs:
             ~/.cache/pypoetry/artifacts
             ~/.cache/pypoetry/cache/repositories
             ~/.cache/pip
-            poetry.lock
-          key: ${{ matrix.python_version }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ matrix.python_version }}-pip-${{ hashFiles('pyproject.toml') }}
           restore-keys: |
             ${{ matrix.python_version }}-pip-
       - uses: abatilo/actions-poetry@v2.1.4
