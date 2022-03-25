@@ -42,7 +42,7 @@ aiocsv = "^1.2.1"
 pandas = {version = "^1.4.0", optional = true, python = "^3.8"}
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.941"
+mypy = "^0.942"
 black = "^22.1.0"
 pytest = "^7.0.0"
 pytest-asyncio = "^0.18.0"
