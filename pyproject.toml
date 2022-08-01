@@ -35,7 +35,7 @@ classifiers = [
 python = "^3.7"
 aiohttp = {version = "^3.8.1", extras = ["speedups"]}
 typing-extensions = "^4.0.1"
-isal = "^0.11.1"
+isal = ">=0.11.1,<1.1.0"
 orjson = "^3.6.6"
 ciso8601 = "^2.2.0"
 aiocsv = "^1.2.1"
